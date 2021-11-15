@@ -81,3 +81,4 @@ executable nft-marketplace-server
     , aeson
     , http-types
     , time
+    , wai

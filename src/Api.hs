@@ -13,11 +13,12 @@ import Servant (
   ReqBody,
   Summary,
   (:>),
+  AuthProtect
  )
 import Servant.API.Generic (Generic, ToServantApi, genericApi, (:-))
 import Servant.Multipart
-import Prelude
 import Data.Text (Text)
+import Servant.Server.Experimental.Auth
 
 import Api.Types
 
@@ -84,9 +85,11 @@ data Routes route = Routes
   { image :: route :- "images" :> ToServantApi ImageApi
   , artist :: route :- "artists" :> ToServantApi ArtistApi
   , purchase :: route :- "purchases" :> ToServantApi PurchaseApi
-  , admin :: route :- "admin" :> ToServantApi AdminApi
+  , admin :: route :- "admin" :> AuthProtect "header-auth" :> ToServantApi AdminApi
   }
   deriving Generic
+
+type instance AuthServerData (AuthProtect "header-auth") = Text
 
 marketplaceApi :: Proxy (ToServantApi Routes)
 marketplaceApi = genericApi (Proxy :: Proxy Routes)

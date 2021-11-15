@@ -24,6 +24,9 @@ import Control.Monad.IO.Class (liftIO)
 
 import Network.Wai.Parse
 import Servant.Multipart
+import Data.Text (Text)
+import Servant.Server.Experimental.Auth
+import Network.Wai (Request, requestHeaders)
 
 import Api
 import App
@@ -33,12 +36,17 @@ import Schema (migrateAll)
 appService :: Env -> Application
 appService env = serveWithContext marketplaceApi ctx appServer
   where
-    ctx = multipartOpts :. EmptyContext
+    ctx = authCtx :. multipartOpts :. EmptyContext
 
     multipartOpts = (defaultMultipartOptions (Proxy :: Proxy Tmp))
       -- Disallow files > 2MiB
       { generalOptions = setMaxRequestFileSize (2 * 1024 * 1024) defaultParseRequestBodyOptions
       }
+
+    authCtx :: AuthHandler Request Text
+    authCtx = mkAuthHandler handler
+      where
+        handler req = pure "123"
 
     hoistApp :: App a -> Handler a
     hoistApp = Handler . ExceptT . try . flip runReaderT env . unApp
@@ -47,7 +55,10 @@ appService env = serveWithContext marketplaceApi ctx appServer
     appServerT = genericServerT handlers
 
     appServer :: ServerT (ToServantApi Routes) Handler
-    appServer = hoistServer marketplaceApi hoistApp appServerT
+    appServer = hoistServerWithContext marketplaceApi hoistCtx hoistApp appServerT
+
+    hoistCtx :: Proxy '[AuthHandler Request Text]
+    hoistCtx = Proxy
 
 main :: IO ()
 main = do

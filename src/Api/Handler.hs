@@ -140,8 +140,8 @@ handlers = Routes {..}
       pure $ GetPurchaseResponse purchases
 
     -- admin handlers
-    admin :: ToServant AdminApi (AsServerT App)
-    admin = genericServerT AdminApi {..}
+    admin :: Text -> ToServant AdminApi (AsServerT App)
+    admin authStuff = genericServerT AdminApi {..}
 
     unlistImage :: Text -> App UnlistImageResponse
     unlistImage imageHash = do
