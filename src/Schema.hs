@@ -17,4 +17,10 @@ Image
     sha256hash Text
     UniqueSha256hash sha256hash
     deriving Show
+Artist
+    name Text
+    pubKeyHash Text
+    UniquePubKeyHash pubKeyHash
+    UniqueName name
+    deriving Show
 |]

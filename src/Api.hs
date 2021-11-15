@@ -26,24 +26,51 @@ data ImageApi route = ImageApi
       route
         :- Summary "Create a new image returning its id."
         :> MultipartForm Tmp (MultipartData Tmp)
-        :> Post '[JSON] Text
+        :> Post '[JSON] UploadImageResponse
+
+   -- TODO: pagination
+  , listImages ::
+      route
+        :- Summary "Get all images"
+        :> Get '[JSON] ListImagesResponse
   }
-  deriving (Generic)
+  deriving Generic
+
+data ArtistApi route = ArtistApi
+  { lookupArtist ::
+      route
+        :- Summary "Look up artist name by pubKeyHash"
+        :> Capture "hash" Text
+        :> Get '[JSON] LookupArtistResponse
+  , listArtists ::
+      route
+        :- Summary "Get all artists"
+        :> Get '[JSON] ListArtistsResponse
+  }
+  deriving Generic
 
 data AdminApi route = AdminApi
   { unlistImage ::
       route
-        :- Summary "Remove image from the marketplace."
+        :- "unlist_image"
+        :> Summary "Remove image from the marketplace."
         :> Capture "hash" Text
         :> Post '[JSON] UnlistImageResponse
+  , createArtist ::
+      route
+        :- "create_artist"
+        :> Summary "Create a new artist"
+        :> ReqBody '[JSON] CreateArtistRequest
+        :> Post '[JSON] CreateArtistResponse
   }
-  deriving (Generic)
+  deriving Generic
 
 data Routes route = Routes
   { image :: route :- "image" :> ToServantApi ImageApi
+  , artist :: route :- "artist" :> ToServantApi ArtistApi
   , admin :: route :- "admin" :> ToServantApi AdminApi
   }
-  deriving (Generic)
+  deriving Generic
 
 marketplaceApi :: Proxy (ToServantApi Routes)
 marketplaceApi = genericApi (Proxy :: Proxy Routes)

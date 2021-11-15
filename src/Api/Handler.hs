@@ -1,7 +1,5 @@
 module Api.Handler where
 
-import Prelude
-
 import Servant.API.Generic (ToServant)
 import Servant.Server.Generic (AsServerT, genericServerT)
 import Data.Text (Text)
@@ -32,8 +30,15 @@ handlers = Routes {..}
     image :: ToServant ImageApi (AsServerT App)
     image = genericServerT ImageApi {..}
 
-    uploadImage :: MultipartData Tmp -> App Text
+    runDB = flip P.runSqlPersistMPool
+
+    uploadImage :: MultipartData Tmp -> App UploadImageResponse
     uploadImage multipartData = do
+      when (null $ files multipartData) $
+        throwJsonError err422 (JsonError "No files uploaded")
+      when (null $ inputs multipartData) $
+        throwJsonError err422 (JsonError "Missing inputs")
+
       liftIO . print . length $ files multipartData
       let img = head $ files multipartData
       let imgTmpPath = fdPayload img
@@ -54,7 +59,7 @@ handlers = Routes {..}
 
       Env{..} <- ask
 
-      imageAlreadyExists <- liftIO $ flip P.runSqlPersistMPool dbConnPool $ do
+      imageAlreadyExists <- liftIO $ runDB dbConnPool $ do
         selectOne $ do
           image <- from $ table @Image
           where_ (image ^. ImageSha256hash ==. (val imgHashHex))
@@ -65,10 +70,55 @@ handlers = Routes {..}
       let imgPath = imageStoreFolder <> "/" <> imgHashHex <> "_" <> imgFilename
       liftIO $ BS.writeFile (Text.unpack imgPath) imgData
 
-      liftIO $ flip P.runSqlPersistMPool dbConnPool $ do
+      liftIO $ runDB dbConnPool $ do
         a <- insert $ Image imageTitle imgPath imgHashHex
         liftIO $ print a
-      pure imgHashHex
+      pure $ UploadImageResponse imgHashHex
+
+    -- TODO: pagination
+    listImages :: App ListImagesResponse
+    listImages = do
+      Env{..} <- ask
+
+      dbImages <- liftIO $ runDB dbConnPool $ do
+        select $ do
+          image <- from $ table @Image
+          pure image
+
+      let toApiImage (Image title path hash) = ListImage title path hash
+      let images = map (toApiImage . entityVal) dbImages
+      pure $ ListImagesResponse images
+
+    -- artist handlers
+    artist :: ToServant ArtistApi (AsServerT App)
+    artist = genericServerT ArtistApi {..}
+
+    lookupArtist :: Text -> App LookupArtistResponse
+    lookupArtist pubKeyHash = do
+      Env{..} <- ask
+      martist <- liftIO $ runDB dbConnPool $ do
+        selectOne $ do
+          artist <- from $ table @Artist
+          where_ (artist ^. ArtistPubKeyHash ==. (val pubKeyHash))
+          pure artist
+
+      Artist artistName _  <-
+        maybe (throwJsonError err422 (JsonError "No artist with such pubKeyHash"))
+              (pure . entityVal)
+              martist
+      pure (LookupArtistResponse artistName)
+
+    listArtists :: App ListArtistsResponse
+    listArtists = do
+      Env{..} <- ask
+      dbArtists <- liftIO $ runDB dbConnPool $ do
+        select $ do
+          artist <- from $ table @Artist
+          pure artist
+
+      let toApiArtist (Artist name pubKeyHash) = ListArtist name pubKeyHash
+      let artists = map (toApiArtist . entityVal) dbArtists
+      pure $ ListArtistsResponse artists
 
     -- admin handlers
     admin :: ToServant AdminApi (AsServerT App)
@@ -78,7 +128,7 @@ handlers = Routes {..}
     unlistImage imageHash = do
       Env{..} <- ask
 
-      imageExists <- liftIO $ flip P.runSqlPersistMPool dbConnPool $ do
+      imageExists <- liftIO $ runDB dbConnPool $ do
         selectOne $ do
           image <- from $ table @Image
           where_ (image ^. ImageSha256hash ==. (val imageHash))
@@ -87,9 +137,27 @@ handlers = Routes {..}
         throwJsonError err422 (JsonError "Image does not exists")
 
       -- TODO: transaction
-      liftIO $ flip P.runSqlPersistMPool dbConnPool $ do
+      liftIO $ runDB dbConnPool $ do
         numDeleted <- deleteCount $ do
           images <- from $ table @Image
           where_ (images ^. ImageSha256hash ==. val imageHash)
         liftIO $ print numDeleted
       pure (UnlistImageResponse "successfully removed image")
+
+    createArtist :: CreateArtistRequest -> App CreateArtistResponse
+    createArtist (CreateArtistRequest name pubKeyHash) = do
+      Env{..} <- ask
+
+      artistExists <- liftIO $ runDB dbConnPool $ do
+        selectOne $ do
+          artist <- from $ table @Artist
+          where_ (artist ^. ArtistPubKeyHash ==. (val pubKeyHash) ||.
+                  artist ^. ArtistName ==. (val name))
+      when (isJust artistExists) $
+        throwJsonError err422 (JsonError "Artist already exists")
+
+      liftIO $ runDB dbConnPool $ do
+        a <- insert $ Artist name pubKeyHash
+        liftIO $ print a
+
+      pure $ CreateArtistResponse name pubKeyHash
