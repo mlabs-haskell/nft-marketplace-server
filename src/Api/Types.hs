@@ -4,6 +4,7 @@ module Api.Types where
 import GHC.Generics (Generic)
 import Data.Aeson (ToJSON, FromJSON)
 import Data.Text (Text)
+import Data.Time (UTCTime)
 
 data UnlistImageResponse = UnlistImageResponse
   { message :: Text
@@ -49,5 +50,40 @@ data CreateArtistRequest = CreateArtistRequest
 data CreateArtistResponse = CreateArtistResponse
   { name :: Text
   , pubKeyHash :: Text
+  } deriving Generic
+    deriving anyclass ToJSON
+
+data CreatePurchaseRequest = CreatePurchaseRequest
+  { imageHash :: Text
+  , authorPubKeyHash :: Text
+  , ownerPubKeyHash :: Text
+  , price :: Text
+  , wasAuctioned :: Bool
+  -- , createdAt :: Text
+  } deriving Generic
+    deriving anyclass FromJSON
+
+data CreatePurchaseResponse = CreatePurchaseResponse
+  { imageHash :: Text
+  , authorPubKeyHash :: Text
+  , ownerPubKeyHash :: Text
+  , price :: Text
+  , wasAuctioned :: Bool
+  , createdAt :: UTCTime
+  } deriving Generic
+    deriving anyclass ToJSON
+
+data GetPurchase = GetPurchase
+  { imageHash :: Text
+  , authorPubKeyHash :: Text
+  , ownerPubKeyHash :: Text
+  , price :: Text
+  , wasAuctioned :: Bool
+  , createdAt :: UTCTime
+  } deriving Generic
+    deriving anyclass ToJSON
+
+data GetPurchaseResponse = GetPurchaseResponse
+  { purchases :: [GetPurchase]
   } deriving Generic
     deriving anyclass ToJSON

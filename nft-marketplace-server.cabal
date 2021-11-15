@@ -80,3 +80,4 @@ executable nft-marketplace-server
     , filepath
     , aeson
     , http-types
+    , time

@@ -60,9 +60,10 @@ main = do
   connPool <- runStderrLoggingT $ createPostgresqlPool connStr 10
 
   let env = Env connPool "marketplace-images"
+  let serverPort = 9999
 
   withStdoutLogger $ \logger -> do
-    let warpSettings = W.setPort 9999 $ W.setLogger logger W.defaultSettings
+    let warpSettings = W.setPort serverPort $ W.setLogger logger W.defaultSettings
     W.runSettings warpSettings (appService env)
 
 {-

@@ -9,6 +9,7 @@ import Prelude
 import Database.Persist
 import Database.Persist.TH
 import Data.Text (Text)
+import Data.Time (UTCTime)
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 Image
@@ -22,5 +23,13 @@ Artist
     pubKeyHash Text
     UniquePubKeyHash pubKeyHash
     UniqueName name
+    deriving Show
+Purchase
+    imageHash Text
+    authorPubKeyHash Text
+    ownerPubKeyHash Text
+    price Text
+    wasAuctioned Bool
+    createdAt UTCTime
     deriving Show
 |]

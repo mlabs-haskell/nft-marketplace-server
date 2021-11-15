@@ -16,6 +16,7 @@ import qualified Data.ByteString as BS
 import Servant (err422)
 import Control.Monad (when, unless)
 import Data.Maybe (isJust)
+import Data.Time (getCurrentTime)
 
 import Api
 import App
@@ -120,6 +121,24 @@ handlers = Routes {..}
       let artists = map (toApiArtist . entityVal) dbArtists
       pure $ ListArtistsResponse artists
 
+    -- purchase handlers
+    purchase :: ToServant PurchaseApi (AsServerT App)
+    purchase = genericServerT PurchaseApi {..}
+
+    getPurchase :: Text -> App GetPurchaseResponse
+    getPurchase imageHash = do
+      Env{..} <- ask
+
+      dbPurchases <- liftIO $ runDB dbConnPool $ do
+        select $ do
+          purchase <- from $ table @Purchase
+          where_ (purchase ^. PurchaseImageHash ==. (val imageHash))
+          pure purchase
+
+      let toApiPurchases (Purchase imageHash authorPkh ownerPkh price wasAuctioned createdAt) = GetPurchase imageHash authorPkh ownerPkh price wasAuctioned createdAt
+      let purchases = map (toApiPurchases . entityVal) dbPurchases
+      pure $ GetPurchaseResponse purchases
+
     -- admin handlers
     admin :: ToServant AdminApi (AsServerT App)
     admin = genericServerT AdminApi {..}
@@ -161,3 +180,15 @@ handlers = Routes {..}
         liftIO $ print a
 
       pure $ CreateArtistResponse name pubKeyHash
+
+    createPurchase :: CreatePurchaseRequest -> App CreatePurchaseResponse
+    createPurchase (CreatePurchaseRequest imageHash authorPkh ownerPkh price wasAuctioned) = do
+      Env{..} <- ask
+
+      -- TODO: get from a request?
+      currentTime <- liftIO $ getCurrentTime
+      liftIO $ runDB dbConnPool $ do
+        p <- insert $ Purchase imageHash authorPkh ownerPkh price wasAuctioned currentTime
+        liftIO $ print p
+
+      pure $ CreatePurchaseResponse imageHash authorPkh ownerPkh price wasAuctioned currentTime

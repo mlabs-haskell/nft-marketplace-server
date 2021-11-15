@@ -49,6 +49,15 @@ data ArtistApi route = ArtistApi
   }
   deriving Generic
 
+data PurchaseApi route = PurchaseApi
+  { getPurchase ::
+      route
+        :- Summary "Get purchases by image hash"
+        :> Capture "hash" Text
+        :> Get '[JSON] GetPurchaseResponse
+  }
+  deriving Generic
+
 data AdminApi route = AdminApi
   { unlistImage ::
       route
@@ -62,12 +71,19 @@ data AdminApi route = AdminApi
         :> Summary "Create a new artist"
         :> ReqBody '[JSON] CreateArtistRequest
         :> Post '[JSON] CreateArtistResponse
+  , createPurchase ::
+      route
+        :- "create_purchase"
+        :> Summary "Create a new purchase"
+        :> ReqBody '[JSON] CreatePurchaseRequest
+        :> Post '[JSON] CreatePurchaseResponse
   }
   deriving Generic
 
 data Routes route = Routes
-  { image :: route :- "image" :> ToServantApi ImageApi
-  , artist :: route :- "artist" :> ToServantApi ArtistApi
+  { image :: route :- "images" :> ToServantApi ImageApi
+  , artist :: route :- "artists" :> ToServantApi ArtistApi
+  , purchase :: route :- "purchases" :> ToServantApi PurchaseApi
   , admin :: route :- "admin" :> ToServantApi AdminApi
   }
   deriving Generic
