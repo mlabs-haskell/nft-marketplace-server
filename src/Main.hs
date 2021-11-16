@@ -3,34 +3,35 @@ module Main where
 import Prelude
 
 -- import           Control.Monad.Catch    (MonadThrow)
-import Network.Wai.Handler.Warp qualified as W
-import Network.Wai.Logger (withStdoutLogger)
-import Servant.Server.Generic (genericServerT)
+
+import Control.Monad (unless)
 import Control.Monad.Catch (try)
 import Control.Monad.Except (ExceptT (..))
-import Control.Monad.Reader (runReaderT, ask)
+import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Logger (runStderrLoggingT)
+import Control.Monad.Reader (ask, runReaderT)
+import Data.Text (Text)
+import Database.Persist.Postgresql
+import Network.Wai (Request)
+import Network.Wai.Handler.Warp qualified as W
+import Network.Wai.Logger (withStdoutLogger)
+import Network.Wai.Parse
 import Servant
 import Servant.API.Generic (ToServantApi)
-import Servant.Server (
-  Application,
-  Handler (..),
-  hoistServer,
-  serve,
- )
-import Database.Persist.Postgresql
-import Control.Monad.Logger (runStderrLoggingT)
-import Control.Monad.IO.Class (liftIO)
-import Control.Monad (unless)
-import Network.Wai.Parse
 import Servant.Multipart
-import Data.Text (Text)
+import Servant.Server (
+    Application,
+    Handler (..),
+    hoistServer,
+    serve,
+ )
 import Servant.Server.Experimental.Auth
-import Network.Wai (Request)
+import Servant.Server.Generic (genericServerT)
 
 import Api
-import App
-import Api.Handler
 import Api.Auth (authHandler)
+import Api.Handler
+import App
 import Schema (migrateAll)
 
 appService :: Env -> Application
@@ -38,10 +39,11 @@ appService env = serveWithContext marketplaceApi ctx appServer
   where
     ctx = (authHandler env) :. multipartOpts :. EmptyContext
 
-    multipartOpts = (defaultMultipartOptions (Proxy :: Proxy Tmp))
-      -- Disallow files > 2MiB
-      { generalOptions = setMaxRequestFileSize (2 * 1024 * 1024) defaultParseRequestBodyOptions
-      }
+    multipartOpts =
+        (defaultMultipartOptions (Proxy :: Proxy Tmp))
+            { -- Disallow files > 2MiB
+              generalOptions = setMaxRequestFileSize (2 * 1024 * 1024) defaultParseRequestBodyOptions
+            }
 
     hoistApp :: App a -> Handler a
     hoistApp = Handler . ExceptT . try . flip runReaderT env . unApp
@@ -57,20 +59,22 @@ appService env = serveWithContext marketplaceApi ctx appServer
 
 main :: IO ()
 main = do
-  let connStr = "host=localhost dbname=marketplacedb user=aske port=5432"
+    let connStr = "host=localhost dbname=marketplacedb user=aske port=5432"
 
-  runStderrLoggingT $ withPostgresqlPool connStr 10 $ \pool ->
-    liftIO $ flip runSqlPersistMPool pool $ do
-        runMigration migrateAll
+    runStderrLoggingT $
+        withPostgresqlPool connStr 10 $ \pool ->
+            liftIO $
+                flip runSqlPersistMPool pool $ do
+                    runMigration migrateAll
 
-  connPool <- runStderrLoggingT $ createPostgresqlPool connStr 10
+    connPool <- runStderrLoggingT $ createPostgresqlPool connStr 10
 
-  let env = Env connPool "marketplace-images"
-  let serverPort = 9999
+    let env = Env connPool "marketplace-images"
+    let serverPort = 9999
 
-  withStdoutLogger $ \logger -> do
-    let warpSettings = W.setPort serverPort $ W.setLogger logger W.defaultSettings
-    W.runSettings warpSettings (appService env)
+    withStdoutLogger $ \logger -> do
+        let warpSettings = W.setPort serverPort $ W.setLogger logger W.defaultSettings
+        W.runSettings warpSettings (appService env)
 
 {-
 

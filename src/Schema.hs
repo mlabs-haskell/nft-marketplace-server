@@ -1,17 +1,19 @@
-{-# LANGUAGE QuasiQuotes                #-}
-{-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Schema where
 
-import Prelude
-import Database.Persist
-import Database.Persist.TH
 import Data.Text (Text)
 import Data.Time (UTCTime)
+import Database.Persist
+import Database.Persist.TH
+import Prelude
 
-share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
+share
+    [mkPersist sqlSettings, mkMigrate "migrateAll"]
+    [persistLowerCase|
 Image
     title Text
     path Text

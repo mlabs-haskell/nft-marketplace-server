@@ -1,7 +1,6 @@
 cabal-version:       2.4
 name:                nft-marketplace-server
 version:             0.1.0.0
-license-file:        LICENSE
 author:              mlabs
 maintainer:          anton@mlabs.gmail
 build-type:          Simple

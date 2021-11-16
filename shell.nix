@@ -4,11 +4,11 @@ let
 
   inherit (nixpkgs) pkgs;
 
-  f = { mkDerivation, base, base16, bytestring, cryptohash-sha256
-      , esqueleto, exceptions, filepath, lib, monad-logger, mtl
-      , persistent, persistent-postgresql, resource-pool, servant
-      , servant-multipart, servant-server, text, wai-extra, wai-logger
-      , warp
+  f = { mkDerivation, aeson, base, base16, bytestring
+      , cryptohash-sha256, esqueleto, exceptions, filepath, http-types
+      , lib, monad-logger, mtl, persistent, persistent-postgresql
+      , resource-pool, servant, servant-multipart, servant-server, text
+      , time, wai, wai-extra, wai-logger, warp
       }:
       mkDerivation {
         pname = "nft-marketplace-server";
@@ -17,10 +17,10 @@ let
         isLibrary = false;
         isExecutable = true;
         executableHaskellDepends = [
-          base base16 bytestring cryptohash-sha256 esqueleto exceptions
-          filepath monad-logger mtl persistent persistent-postgresql
-          resource-pool servant servant-multipart servant-server text
-          wai-extra wai-logger warp
+          aeson base base16 bytestring cryptohash-sha256 esqueleto exceptions
+          filepath http-types monad-logger mtl persistent
+          persistent-postgresql resource-pool servant servant-multipart
+          servant-server text time wai wai-extra wai-logger warp
         ];
         license = "unknown";
         hydraPlatforms = lib.platforms.none;
