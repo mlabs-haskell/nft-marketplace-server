@@ -18,10 +18,11 @@ import Servant.API.Generic (ToServant)
 import Servant.Multipart
 import Servant.Server.Generic (AsServerT, genericServerT)
 
-import Api
-import Api.Error
+import Api (AdminApi (..), ArtistApi (..), ImageApi (..), PurchaseApi (..), Routes (..))
+import Api.Error (JsonError (..), throwJsonError)
+import App (App, Env (..))
+
 import Api.Types
-import App
 import Schema
 
 handlers :: Routes (AsServerT App)

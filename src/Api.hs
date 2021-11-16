@@ -13,8 +13,8 @@ import Servant (
     (:>),
  )
 import Servant.API.Generic (Generic, ToServantApi, genericApi, (:-))
-import Servant.Multipart
-import Servant.Server.Experimental.Auth
+import Servant.Multipart (MultipartData, MultipartForm, Tmp)
+import Servant.Server.Experimental.Auth (AuthServerData)
 
 import Api.Types
 

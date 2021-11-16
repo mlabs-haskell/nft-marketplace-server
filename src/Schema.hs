@@ -8,9 +8,7 @@ module Schema where
 
 import Data.Text (Text)
 import Data.Time (UTCTime)
-import Database.Persist
-import Database.Persist.TH
-import Prelude
+import Database.Persist.TH (mkMigrate, mkPersist, persistLowerCase, share, sqlSettings)
 
 share
     [mkPersist sqlSettings, mkMigrate "migrateAll"]

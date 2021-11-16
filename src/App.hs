@@ -8,7 +8,7 @@ import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Reader (MonadReader, ReaderT)
 import Data.Pool (Pool)
 import Data.Text (Text)
-import Database.Persist.SqlBackend
+import Database.Persist.SqlBackend (SqlBackend)
 import GHC.Generics (Generic)
 
 newtype App a = App {unApp :: ReaderT Env IO a}

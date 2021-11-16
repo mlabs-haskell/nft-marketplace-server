@@ -2,13 +2,14 @@ module Api.Auth (authHandler) where
 
 import Control.Monad.IO.Class (liftIO)
 import Data.Text.Encoding (decodeUtf8)
+import Network.Wai (Request, requestHeaders)
+import Servant (err401, throwError)
+import Servant.Server.Experimental.Auth (AuthHandler, mkAuthHandler)
+
 import Database.Esqueleto.Experimental
 import Database.Persist.Postgresql qualified as P
-import Network.Wai (Request, requestHeaders)
-import Servant
-import Servant.Server.Experimental.Auth
 
-import App
+import App (Env (..))
 import Schema
 
 authHandler :: Env -> AuthHandler Request ()
