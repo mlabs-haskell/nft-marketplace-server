@@ -1,17 +1,13 @@
-module Api where
+module Api (marketplaceApi, Routes (..), ImageApi (..), PurchaseApi (..), AdminApi (..), ArtistApi (..)) where
 
 import Data.Text (Text)
 import Servant (
     AuthProtect,
     Capture,
-    Delete,
     Get,
     JSON,
-    NoContent,
     Post,
     Proxy (..),
-    Put,
-    PutCreated,
     ReqBody,
     Summary,
     (:>),
@@ -34,7 +30,7 @@ data ImageApi route = ImageApi
             :- Summary "Get all images"
             :> Get '[JSON] ListImagesResponse
     }
-    deriving (Generic)
+    deriving stock (Generic)
 
 data ArtistApi route = ArtistApi
     { lookupArtist ::
@@ -47,7 +43,7 @@ data ArtistApi route = ArtistApi
             :- Summary "Get all artists"
             :> Get '[JSON] ListArtistsResponse
     }
-    deriving (Generic)
+    deriving stock (Generic)
 
 data PurchaseApi route = PurchaseApi
     { getPurchase ::
@@ -56,7 +52,7 @@ data PurchaseApi route = PurchaseApi
             :> Capture "hash" Text
             :> Get '[JSON] GetPurchaseResponse
     }
-    deriving (Generic)
+    deriving stock (Generic)
 
 data AdminApi route = AdminApi
     { unlistImage ::
@@ -78,7 +74,7 @@ data AdminApi route = AdminApi
             :> ReqBody '[JSON] CreatePurchaseRequest
             :> Post '[JSON] CreatePurchaseResponse
     }
-    deriving (Generic)
+    deriving stock (Generic)
 
 data Routes route = Routes
     { image :: route :- "images" :> ToServantApi ImageApi
@@ -86,7 +82,7 @@ data Routes route = Routes
     , purchase :: route :- "purchases" :> ToServantApi PurchaseApi
     , admin :: route :- "admin" :> AuthProtect "header-auth" :> ToServantApi AdminApi
     }
-    deriving (Generic)
+    deriving stock (Generic)
 
 type instance AuthServerData (AuthProtect "header-auth") = ()
 

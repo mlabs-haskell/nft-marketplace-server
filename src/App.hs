@@ -4,7 +4,7 @@ module App (
 ) where
 
 import Control.Monad.Catch (MonadThrow)
-import Control.Monad.IO.Class (MonadIO, liftIO)
+import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Reader (MonadReader, ReaderT)
 import Data.Pool (Pool)
 import Data.Text (Text)
@@ -20,4 +20,4 @@ data Env = Env
     { dbConnPool :: PgConnectionPool
     , imageStoreFolder :: Text
     }
-    deriving (Generic)
+    deriving stock (Generic)

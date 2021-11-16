@@ -1,16 +1,10 @@
 module Main (main) where
 
-import Prelude
-
--- import           Control.Monad.Catch    (MonadThrow)
-
-import Control.Monad (unless)
 import Control.Monad.Catch (try)
 import Control.Monad.Except (ExceptT (..))
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runStderrLoggingT)
-import Control.Monad.Reader (ask, runReaderT)
-import Data.Text (Text)
+import Control.Monad.Reader (runReaderT)
 import Database.Persist.Postgresql
 import Network.Wai (Request)
 import Network.Wai.Handler.Warp qualified as W
@@ -19,12 +13,6 @@ import Network.Wai.Parse
 import Servant
 import Servant.API.Generic (ToServantApi)
 import Servant.Multipart
-import Servant.Server (
-    Application,
-    Handler (..),
-    hoistServer,
-    serve,
- )
 import Servant.Server.Experimental.Auth
 import Servant.Server.Generic (genericServerT)
 

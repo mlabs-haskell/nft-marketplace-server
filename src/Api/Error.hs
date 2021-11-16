@@ -1,4 +1,7 @@
-module Api.Error where
+module Api.Error (
+    throwJsonError,
+    JsonError (..),
+) where
 
 import Control.Monad.Catch (MonadThrow, throwM)
 import Data.Aeson (ToJSON, encode)
@@ -7,9 +10,6 @@ import GHC.Generics (Generic)
 import Network.HTTP.Types (hContentType)
 import Servant (
     ServerError,
-    err400,
-    err404,
-    err500,
     errBody,
     errHeaders,
  )
@@ -17,7 +17,8 @@ import Servant (
 data JsonError = JsonError
     { error :: Text
     }
-    deriving (Generic, ToJSON)
+    deriving stock (Generic)
+    deriving anyclass (ToJSON)
 
 throwJsonError :: (MonadThrow m, ToJSON a) => ServerError -> a -> m b
 throwJsonError err json =
