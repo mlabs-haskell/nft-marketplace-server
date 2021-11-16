@@ -101,7 +101,7 @@ handlers = Routes{..}
             runDB dbConnPool $ do
                 selectOne $ do
                     artist' <- from $ table @Artist
-                    where_ (artist' ^. ArtistPubKeyHash ==. (val pubKeyHash))
+                    where_ (artist' ^. ArtistPubKeyHash ==. val pubKeyHash)
                     pure artist'
 
         Artist artistName _ <-
