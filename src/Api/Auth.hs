@@ -1,4 +1,4 @@
-module Api.Auth where
+module Api.Auth (authHandler) where
 
 import Control.Monad.IO.Class (liftIO)
 import Data.Text.Encoding (decodeUtf8)

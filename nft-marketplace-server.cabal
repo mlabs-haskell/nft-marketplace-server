@@ -41,21 +41,28 @@ common common-language
 common common-configs
   default-language: Haskell2010
 
-common common-ghc-options
-  Ghc-Options:
-    -fno-ignore-interface-pragmas
-    -fno-omit-interface-pragmas
-    -fno-specialize
-    -fno-strictness
-    -fno-warn-orphans
-    -fobject-code
-
 executable nft-marketplace-server
   import:  common-language
   import:  common-configs
-  import:  common-ghc-options  
+
+  Ghc-Options:
+    -Wall
+    -Wcompat
+    -Wincomplete-uni-patterns
+    -Wredundant-constraints
+    -Wmissing-export-lists
+    -Wmissing-deriving-strategies
+    -Werror
 
   main-is: Main.hs
+  other-modules:
+    Api
+    Api.Auth
+    Api.Error
+    Api.Handler
+    Api.Types
+    App
+    Schema
   hs-source-dirs: src
   build-depends:
       base

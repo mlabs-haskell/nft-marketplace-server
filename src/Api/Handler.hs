@@ -1,4 +1,4 @@
-module Api.Handler where
+module Api.Handler (handlers) where
 
 import Control.Monad (unless, when)
 import Control.Monad.IO.Class (liftIO)
@@ -62,8 +62,8 @@ handlers = Routes{..}
         imageAlreadyExists <- liftIO $
             runDB dbConnPool $ do
                 selectOne $ do
-                    image <- from $ table @Image
-                    where_ (image ^. ImageSha256hash ==. (val imgHashHex))
+                    image' <- from $ table @Image
+                    where_ (image' ^. ImageSha256hash ==. (val imgHashHex))
 
         when (isJust imageAlreadyExists) $
             throwJsonError err422 (JsonError "Image already exists")
@@ -85,8 +85,8 @@ handlers = Routes{..}
         dbImages <- liftIO $
             runDB dbConnPool $ do
                 select $ do
-                    image <- from $ table @Image
-                    pure image
+                    image' <- from $ table @Image
+                    pure image'
 
         let toApiImage (Image title path hash) = ListImage title path hash
         let images = map (toApiImage . entityVal) dbImages
@@ -102,9 +102,9 @@ handlers = Routes{..}
         martist <- liftIO $
             runDB dbConnPool $ do
                 selectOne $ do
-                    artist <- from $ table @Artist
-                    where_ (artist ^. ArtistPubKeyHash ==. (val pubKeyHash))
-                    pure artist
+                    artist' <- from $ table @Artist
+                    where_ (artist' ^. ArtistPubKeyHash ==. (val pubKeyHash))
+                    pure artist'
 
         Artist artistName _ <-
             maybe
@@ -119,8 +119,8 @@ handlers = Routes{..}
         dbArtists <- liftIO $
             runDB dbConnPool $ do
                 select $ do
-                    artist <- from $ table @Artist
-                    pure artist
+                    artist' <- from $ table @Artist
+                    pure artist'
 
         let toApiArtist (Artist name pubKeyHash) = ListArtist name pubKeyHash
         let artists = map (toApiArtist . entityVal) dbArtists
@@ -137,11 +137,11 @@ handlers = Routes{..}
         dbPurchases <- liftIO $
             runDB dbConnPool $ do
                 select $ do
-                    purchase <- from $ table @Purchase
-                    where_ (purchase ^. PurchaseImageHash ==. (val imageHash))
-                    pure purchase
+                    purchase' <- from $ table @Purchase
+                    where_ (purchase' ^. PurchaseImageHash ==. (val imageHash))
+                    pure purchase'
 
-        let toApiPurchases (Purchase imageHash authorPkh ownerPkh price wasAuctioned createdAt) = GetPurchase imageHash authorPkh ownerPkh price wasAuctioned createdAt
+        let toApiPurchases (Purchase imgHash authorPkh ownerPkh price wasAuctioned createdAt) = GetPurchase imgHash authorPkh ownerPkh price wasAuctioned createdAt
         let purchases = map (toApiPurchases . entityVal) dbPurchases
         pure $ GetPurchaseResponse purchases
 
@@ -156,8 +156,8 @@ handlers = Routes{..}
         imageExists <- liftIO $
             runDB dbConnPool $ do
                 selectOne $ do
-                    image <- from $ table @Image
-                    where_ (image ^. ImageSha256hash ==. (val imageHash))
+                    image' <- from $ table @Image
+                    where_ (image' ^. ImageSha256hash ==. (val imageHash))
 
         unless (isJust imageExists) $
             throwJsonError err422 (JsonError "Image does not exists")
@@ -178,10 +178,10 @@ handlers = Routes{..}
         artistExists <- liftIO $
             runDB dbConnPool $ do
                 selectOne $ do
-                    artist <- from $ table @Artist
+                    artist' <- from $ table @Artist
                     where_
-                        ( artist ^. ArtistPubKeyHash ==. (val pubKeyHash)
-                            ||. artist ^. ArtistName ==. (val name)
+                        ( artist' ^. ArtistPubKeyHash ==. (val pubKeyHash)
+                            ||. artist' ^. ArtistName ==. (val name)
                         )
         when (isJust artistExists) $
             throwJsonError err422 (JsonError "Artist already exists")
