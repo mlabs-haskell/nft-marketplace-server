@@ -25,7 +25,7 @@ import Schema (migrateAll)
 appService :: Env -> Application
 appService env = serveWithContext marketplaceApi ctx appServer
   where
-    ctx = (authHandler env) :. multipartOpts :. EmptyContext
+    ctx = authHandler env :. multipartOpts :. EmptyContext
 
     multipartOpts =
         (defaultMultipartOptions (Proxy :: Proxy Tmp))

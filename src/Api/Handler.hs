@@ -45,8 +45,8 @@ handlers = Routes{..}
         let imgTmpPath = fdPayload img
         let imgFilename = fdFileName img
 
-        liftIO $ print $ imgTmpPath
-        liftIO $ print $ imgFilename
+        liftIO $ print imgTmpPath
+        liftIO $ print imgFilename
 
         imgData <- liftIO . BS.readFile $ imgTmpPath
 
@@ -63,7 +63,7 @@ handlers = Routes{..}
             runDB dbConnPool $ do
                 selectOne $ do
                     image' <- from $ table @Image
-                    where_ (image' ^. ImageSha256hash ==. (val imgHashHex))
+                    where_ (image' ^. ImageSha256hash ==. val imgHashHex)
 
         when (isJust imageAlreadyExists) $
             throwJsonError err422 (JsonError "Image already exists")
@@ -84,9 +84,7 @@ handlers = Routes{..}
 
         dbImages <- liftIO $
             runDB dbConnPool $ do
-                select $ do
-                    image' <- from $ table @Image
-                    pure image'
+                select . from $ table @Image
 
         let toApiImage (Image title path hash) = ListImage title path hash
         let images = map (toApiImage . entityVal) dbImages
@@ -118,9 +116,7 @@ handlers = Routes{..}
         Env{..} <- ask
         dbArtists <- liftIO $
             runDB dbConnPool $ do
-                select $ do
-                    artist' <- from $ table @Artist
-                    pure artist'
+                select . from $ table @Artist
 
         let toApiArtist (Artist name pubKeyHash) = ListArtist name pubKeyHash
         let artists = map (toApiArtist . entityVal) dbArtists
@@ -138,7 +134,7 @@ handlers = Routes{..}
             runDB dbConnPool $ do
                 select $ do
                     purchase' <- from $ table @Purchase
-                    where_ (purchase' ^. PurchaseImageHash ==. (val imageHash))
+                    where_ (purchase' ^. PurchaseImageHash ==. val imageHash)
                     pure purchase'
 
         let toApiPurchases (Purchase imgHash authorPkh ownerPkh price wasAuctioned createdAt) = GetPurchase imgHash authorPkh ownerPkh price wasAuctioned createdAt
@@ -157,7 +153,7 @@ handlers = Routes{..}
             runDB dbConnPool $ do
                 selectOne $ do
                     image' <- from $ table @Image
-                    where_ (image' ^. ImageSha256hash ==. (val imageHash))
+                    where_ (image' ^. ImageSha256hash ==. val imageHash)
 
         unless (isJust imageExists) $
             throwJsonError err422 (JsonError "Image does not exists")
@@ -180,8 +176,8 @@ handlers = Routes{..}
                 selectOne $ do
                     artist' <- from $ table @Artist
                     where_
-                        ( artist' ^. ArtistPubKeyHash ==. (val pubKeyHash)
-                            ||. artist' ^. ArtistName ==. (val name)
+                        ( artist' ^. ArtistPubKeyHash ==. val pubKeyHash
+                            ||. artist' ^. ArtistName ==. val name
                         )
         when (isJust artistExists) $
             throwJsonError err422 (JsonError "Artist already exists")
@@ -198,7 +194,7 @@ handlers = Routes{..}
         Env{..} <- ask
 
         -- TODO: get from a request?
-        currentTime <- liftIO $ getCurrentTime
+        currentTime <- liftIO getCurrentTime
         liftIO $
             runDB dbConnPool $ do
                 p <- insert $ Purchase imageHash authorPkh ownerPkh price wasAuctioned currentTime

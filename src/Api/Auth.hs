@@ -25,7 +25,7 @@ authHandler env = mkAuthHandler handler
             flip P.runSqlPersistMPool dbConnPool $ do
                 selectOne $ do
                     token <- from $ table @AdminToken
-                    where_ (token ^. AdminTokenToken ==. (val authHeaderText))
+                    where_ (token ^. AdminTokenToken ==. val authHeaderText)
         case adminToken of
             Nothing -> throwUnathorized
             Just _ -> pure ()

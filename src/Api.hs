@@ -45,7 +45,7 @@ data ArtistApi route = ArtistApi
     }
     deriving stock (Generic)
 
-data PurchaseApi route = PurchaseApi
+newtype PurchaseApi route = PurchaseApi
     { getPurchase ::
         route
             :- Summary "Get purchases by image hash"

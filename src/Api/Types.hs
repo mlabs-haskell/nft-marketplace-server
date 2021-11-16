@@ -21,19 +21,19 @@ import Data.Text (Text)
 import Data.Time (UTCTime)
 import GHC.Generics (Generic)
 
-data UnlistImageResponse = UnlistImageResponse
+newtype UnlistImageResponse = UnlistImageResponse
     { message :: Text
     }
     deriving stock (Generic)
     deriving anyclass (ToJSON)
 
-data UploadImageResponse = UploadImageResponse
+newtype UploadImageResponse = UploadImageResponse
     { sha256hash :: Text
     }
     deriving stock (Generic)
     deriving anyclass (ToJSON)
 
-data ListImagesResponse = ListImagesResponse
+newtype ListImagesResponse = ListImagesResponse
     { images :: [ListImage]
     }
     deriving stock (Generic)
@@ -47,7 +47,7 @@ data ListImage = ListImage
     deriving stock (Generic)
     deriving anyclass (ToJSON)
 
-data LookupArtistResponse = LookupArtistResponse
+newtype LookupArtistResponse = LookupArtistResponse
     { name :: Text
     }
     deriving stock (Generic)
@@ -60,7 +60,7 @@ data ListArtist = ListArtist
     deriving stock (Generic)
     deriving anyclass (ToJSON)
 
-data ListArtistsResponse = ListArtistsResponse
+newtype ListArtistsResponse = ListArtistsResponse
     { artists :: [ListArtist]
     }
     deriving stock (Generic)
@@ -113,7 +113,7 @@ data GetPurchase = GetPurchase
     deriving stock (Generic)
     deriving anyclass (ToJSON)
 
-data GetPurchaseResponse = GetPurchaseResponse
+newtype GetPurchaseResponse = GetPurchaseResponse
     { purchases :: [GetPurchase]
     }
     deriving stock (Generic)

@@ -14,7 +14,7 @@ import Servant (
     errHeaders,
  )
 
-data JsonError = JsonError
+newtype JsonError = JsonError
     { error :: Text
     }
     deriving stock (Generic)
