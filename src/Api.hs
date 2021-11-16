@@ -89,7 +89,7 @@ data Routes route = Routes
   }
   deriving Generic
 
-type instance AuthServerData (AuthProtect "header-auth") = Text
+type instance AuthServerData (AuthProtect "header-auth") = ()
 
 marketplaceApi :: Proxy (ToServantApi Routes)
 marketplaceApi = genericApi (Proxy :: Proxy Routes)

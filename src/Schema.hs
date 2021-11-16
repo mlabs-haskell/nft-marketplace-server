@@ -32,4 +32,8 @@ Purchase
     wasAuctioned Bool
     createdAt UTCTime
     deriving Show
+AdminToken
+    token Text
+    UniqueToken token
+    deriving Show
 |]

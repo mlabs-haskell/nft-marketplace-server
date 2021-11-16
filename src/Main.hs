@@ -8,7 +8,7 @@ import Network.Wai.Logger (withStdoutLogger)
 import Servant.Server.Generic (genericServerT)
 import Control.Monad.Catch (try)
 import Control.Monad.Except (ExceptT (..))
-import Control.Monad.Reader (runReaderT)
+import Control.Monad.Reader (runReaderT, ask)
 import Servant
 import Servant.API.Generic (ToServantApi)
 import Servant.Server (
@@ -17,36 +17,31 @@ import Servant.Server (
   hoistServer,
   serve,
  )
-
 import Database.Persist.Postgresql
 import Control.Monad.Logger (runStderrLoggingT)
 import Control.Monad.IO.Class (liftIO)
-
+import Control.Monad (unless)
 import Network.Wai.Parse
 import Servant.Multipart
 import Data.Text (Text)
 import Servant.Server.Experimental.Auth
-import Network.Wai (Request, requestHeaders)
+import Network.Wai (Request)
 
 import Api
 import App
 import Api.Handler
+import Api.Auth (authHandler)
 import Schema (migrateAll)
 
 appService :: Env -> Application
 appService env = serveWithContext marketplaceApi ctx appServer
   where
-    ctx = authCtx :. multipartOpts :. EmptyContext
+    ctx = (authHandler env) :. multipartOpts :. EmptyContext
 
     multipartOpts = (defaultMultipartOptions (Proxy :: Proxy Tmp))
       -- Disallow files > 2MiB
       { generalOptions = setMaxRequestFileSize (2 * 1024 * 1024) defaultParseRequestBodyOptions
       }
-
-    authCtx :: AuthHandler Request Text
-    authCtx = mkAuthHandler handler
-      where
-        handler req = pure "123"
 
     hoistApp :: App a -> Handler a
     hoistApp = Handler . ExceptT . try . flip runReaderT env . unApp
@@ -57,7 +52,7 @@ appService env = serveWithContext marketplaceApi ctx appServer
     appServer :: ServerT (ToServantApi Routes) Handler
     appServer = hoistServerWithContext marketplaceApi hoistCtx hoistApp appServerT
 
-    hoistCtx :: Proxy '[AuthHandler Request Text]
+    hoistCtx :: Proxy '[AuthHandler Request ()]
     hoistCtx = Proxy
 
 main :: IO ()
