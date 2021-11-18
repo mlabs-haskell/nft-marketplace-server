@@ -1,60 +1,54 @@
-cabal-version:       2.4
-name:                nft-marketplace-server
-version:             0.1.0.0
-author:              mlabs
-maintainer:          anton@mlabs.gmail
-build-type:          Simple
+cabal-version: 2.4
+name:          nft-marketplace-server
+version:       0.1.0.0
+author:        mlabs
+maintainer:    anton@mlabs.gmail
+build-type:    Simple
 
 common common-language
-    default-extensions:
-      BangPatterns
-      ExplicitForAll
-      FlexibleContexts
-      ScopedTypeVariables
-      DerivingStrategies
-      DeriveAnyClass
-      DeriveGeneric
-      StandaloneDeriving
-      DeriveLift
-      GeneralizedNewtypeDeriving
-      DeriveFunctor
-      DeriveFoldable
-      DeriveTraversable
-      LambdaCase
-      MonoLocalBinds
-      MultiParamTypeClasses
-      RecordWildCards
-      OverloadedStrings
-      TypeFamilies
-      QuasiQuotes
-      TemplateHaskell
-      DataKinds
-      TypeOperators
-      TypeApplications
-      FlexibleInstances
-      TypeSynonymInstances
-      TupleSections
-      NumericUnderscores
-      ImportQualifiedPost
-      RankNTypes
-      
+  default-extensions:
+    BangPatterns
+    DataKinds
+    DeriveAnyClass
+    DeriveFoldable
+    DeriveFunctor
+    DeriveGeneric
+    DeriveLift
+    DeriveTraversable
+    DerivingStrategies
+    ExplicitForAll
+    FlexibleContexts
+    FlexibleInstances
+    GeneralizedNewtypeDeriving
+    ImportQualifiedPost
+    LambdaCase
+    MonoLocalBinds
+    MultiParamTypeClasses
+    NumericUnderscores
+    OverloadedStrings
+    QuasiQuotes
+    RankNTypes
+    RecordWildCards
+    ScopedTypeVariables
+    StandaloneDeriving
+    TemplateHaskell
+    TupleSections
+    TypeApplications
+    TypeFamilies
+    TypeOperators
+    TypeSynonymInstances
+
 common common-configs
   default-language: Haskell2010
 
 executable nft-marketplace-server
-  import:  common-language
-  import:  common-configs
+  import:         common-language
+  import:         common-configs
+  ghc-options:
+    -Wall -Wcompat -Wincomplete-uni-patterns -Wredundant-constraints
+    -Wmissing-export-lists -Wmissing-deriving-strategies -Werror
 
-  Ghc-Options:
-    -Wall
-    -Wcompat
-    -Wincomplete-uni-patterns
-    -Wredundant-constraints
-    -Wmissing-export-lists
-    -Wmissing-deriving-strategies
-    -Werror
-
-  main-is: Main.hs
+  main-is:        Main.hs
   other-modules:
     Api
     Api.Auth
@@ -63,28 +57,30 @@ executable nft-marketplace-server
     Api.Types
     App
     Schema
+
   hs-source-dirs: src
   build-depends:
-      base
-    , text
-    , mtl
-    , bytestring
-    , servant
-    , servant-server
-    , servant-multipart
-    , warp
-    , wai-logger
-    , exceptions
-    , cryptohash-sha256
+    , aeson
+    , base
     , base16
+    , bytestring
+    , cryptohash-sha256
     , esqueleto
+    , exceptions
+    , filepath
+    , http-types
+    , monad-logger
+    , mtl
+    , optparse-applicative
     , persistent
     , persistent-postgresql
-    , monad-logger
     , resource-pool
-    , wai-extra
-    , filepath
-    , aeson
-    , http-types
+    , servant
+    , servant-multipart
+    , servant-server
+    , text
     , time
     , wai
+    , wai-extra
+    , wai-logger
+    , warp
