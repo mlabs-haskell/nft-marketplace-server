@@ -5,6 +5,8 @@ import Control.Monad.Except (ExceptT (..))
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runStderrLoggingT)
 import Control.Monad.Reader (runReaderT)
+import Data.ByteString.Char8 qualified as BSC
+import Data.Text qualified as Text
 import Database.Persist.Postgresql (createPostgresqlPool, runMigration, runSqlPersistMPool, withPostgresqlPool)
 import Network.Wai (Request)
 import Network.Wai.Handler.Warp qualified as W
@@ -20,6 +22,8 @@ import Api (Routes, marketplaceApi)
 import Api.Auth (authHandler)
 import Api.Handler (handlers)
 import App (App (..), Env (..))
+import Options (Options (..))
+import Options qualified as Options
 import Schema (migrateAll)
 
 appService :: Env -> Application
@@ -47,7 +51,11 @@ appService env = serveWithContext marketplaceApi ctx appServer
 
 main :: IO ()
 main = do
-    let connStr = "host=localhost dbname=marketplacedb user=aske port=5432"
+    Options{..} <- Options.parseOptions
+    let imageFolderText = Text.pack imageFolder
+    let connStr = BSC.pack dbConnectionString
+
+    -- let connStr = "host=localhost dbname=marketplacedb user=aske port=5432"
 
     runStderrLoggingT $
         withPostgresqlPool connStr 1 $ \pool ->
@@ -57,8 +65,7 @@ main = do
 
     connPool <- runStderrLoggingT $ createPostgresqlPool connStr 10
 
-    let env = Env connPool "marketplace-images"
-    let serverPort = 9999
+    let env = Env connPool imageFolderText
 
     withStdoutLogger $ \logger -> do
         let warpSettings = W.setPort serverPort $ W.setLogger logger W.defaultSettings
