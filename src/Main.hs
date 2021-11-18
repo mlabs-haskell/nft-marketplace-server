@@ -50,7 +50,7 @@ main = do
     let connStr = "host=localhost dbname=marketplacedb user=aske port=5432"
 
     runStderrLoggingT $
-        withPostgresqlPool connStr 10 $ \pool ->
+        withPostgresqlPool connStr 1 $ \pool ->
             liftIO $
                 flip runSqlPersistMPool pool $ do
                     runMigration migrateAll
