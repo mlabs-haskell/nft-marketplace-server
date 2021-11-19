@@ -1,6 +1,6 @@
-module Options (Options(..), parseOptions) where
+module Options (Options (..), parseOptions) where
 
-import Options.Applicative (option, Parser, strOption, long, short, help, showDefault, value, metavar, execParser, info, helper, fullDesc, (<**>), auto)
+import Options.Applicative (Parser, auto, execParser, fullDesc, help, helper, info, long, metavar, option, short, showDefault, strOption, value, (<**>))
 
 data Options = Options
     { serverPort :: Int
@@ -34,4 +34,4 @@ options =
             )
 
 parseOptions :: IO Options
-parseOptions = execParser (info (options <**> helper) (fullDesc))
+parseOptions = execParser (info (options <**> helper) fullDesc)

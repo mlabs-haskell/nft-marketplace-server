@@ -23,7 +23,7 @@ import Api.Auth (authHandler)
 import Api.Handler (handlers)
 import App (App (..), Env (..))
 import Options (Options (..))
-import Options qualified as Options
+import Options qualified
 import Schema (migrateAll)
 
 appService :: Env -> Application
