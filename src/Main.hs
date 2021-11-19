@@ -7,7 +7,7 @@ import Control.Monad.Logger (runStderrLoggingT)
 import Control.Monad.Reader (runReaderT)
 import Data.ByteString.Char8 qualified as BSC
 import Data.Text qualified as Text
-import Database.Persist.Postgresql (createPostgresqlPool, runMigration, runSqlPersistMPool, withPostgresqlPool)
+import Database.Persist.Postgresql (runMigration, runSqlPersistMPool, withPostgresqlPool)
 import Network.Wai (Request)
 import Network.Wai.Handler.Warp qualified as W
 import Network.Wai.Logger (withStdoutLogger)
@@ -55,21 +55,16 @@ main = do
     let imageFolderText = Text.pack imageFolder
     let connStr = BSC.pack dbConnectionString
 
-    -- let connStr = "host=localhost dbname=marketplacedb user=aske port=5432"
-
     runStderrLoggingT $
-        withPostgresqlPool connStr 1 $ \pool ->
+        withPostgresqlPool connStr 10 $ \pool ->
             liftIO $
                 flip runSqlPersistMPool pool $ do
                     runMigration migrateAll
-
-    connPool <- runStderrLoggingT $ createPostgresqlPool connStr 10
-
-    let env = Env connPool imageFolderText
-
-    withStdoutLogger $ \logger -> do
-        let warpSettings = W.setPort serverPort $ W.setLogger logger W.defaultSettings
-        W.runSettings warpSettings (appService env)
+                    let env = Env pool imageFolderText
+                    liftIO $
+                        withStdoutLogger $ \logger -> do
+                            let warpSettings = W.setPort serverPort $ W.setLogger logger W.defaultSettings
+                            W.runSettings warpSettings (appService env)
 
 {-
 
