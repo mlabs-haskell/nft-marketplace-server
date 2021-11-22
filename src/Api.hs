@@ -4,6 +4,7 @@ import Data.Text (Text)
 import Servant (
     AuthProtect,
     Capture,
+    Delete,
     Get,
     JSON,
     Post,
@@ -67,6 +68,12 @@ data AdminApi route = AdminApi
             :> Summary "Create a new artist"
             :> ReqBody '[JSON] CreateArtistRequest
             :> Post '[JSON] CreateArtistResponse
+    , deleteArtist ::
+        route
+            :- "delete_artist"
+            :> Summary "Delete an existing artist by pubKeyHash"
+            :> Capture "hash" Text
+            :> Delete '[JSON] DeleteArtistResponse
     , createPurchase ::
         route
             :- "create_purchase"

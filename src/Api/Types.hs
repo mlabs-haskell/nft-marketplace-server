@@ -14,6 +14,7 @@ module Api.Types (
     CreatePurchaseResponse (..),
     GetPurchase (..),
     GetPurchaseResponse (..),
+    DeleteArtistResponse (..),
 ) where
 
 import Data.Aeson (FromJSON, ToJSON)
@@ -115,6 +116,12 @@ data GetPurchase = GetPurchase
 
 newtype GetPurchaseResponse = GetPurchaseResponse
     { purchases :: [GetPurchase]
+    }
+    deriving stock (Generic)
+    deriving anyclass (ToJSON)
+
+newtype DeleteArtistResponse = DeleteArtistResponse
+    { message :: Text
     }
     deriving stock (Generic)
     deriving anyclass (ToJSON)

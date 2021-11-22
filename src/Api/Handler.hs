@@ -190,6 +190,27 @@ handlers = Routes{..}
 
         pure $ CreateArtistResponse name pubKeyHash
 
+    deleteArtist :: Text -> App DeleteArtistResponse
+    deleteArtist pubKeyHash = do
+        Env{..} <- ask
+
+        artistExists <- liftIO $
+            runDB dbConnPool $ do
+                selectOne $ do
+                    artist' <- from $ table @Artist
+                    where_ (artist' ^. ArtistPubKeyHash ==. val pubKeyHash)
+
+        unless (isJust artistExists) $
+            throwJsonError err422 (JsonError "Artist does not exists")
+
+        liftIO $
+            runDB dbConnPool $ do
+                numDeleted <- deleteCount $ do
+                    artists <- from $ table @Artist
+                    where_ (artists ^. ArtistPubKeyHash ==. val pubKeyHash)
+                liftIO $ print numDeleted
+        pure (DeleteArtistResponse "successfully removed artist")
+
     createPurchase :: CreatePurchaseRequest -> App CreatePurchaseResponse
     createPurchase (CreatePurchaseRequest imageHash authorPkh ownerPkh price wasAuctioned) = do
         Env{..} <- ask
