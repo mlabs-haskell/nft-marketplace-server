@@ -27,6 +27,8 @@ Auth by `Authorization: <token>` header.
 * Request ```{"name":"abc", "pubKeyHash": "abc"}```
 * Response ```{"name":"abc","pubKeyHash":"abc"}```
 
+### `DELETE /admin/delete_artist`
+
 ### `POST /admin/create_purchase`
 * Request 
 ```{"imageHash":"a", "authorPubKeyHash":"b", "ownerPubKeyHash":"c", "price":"d", "wasAuctioned":true }```
