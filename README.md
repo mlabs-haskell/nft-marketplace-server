@@ -1,7 +1,28 @@
 # nft-marketplace-server
 ## Images
-### `GET /images`
-* Response ```{"images":[{"path":"marketplace-images/c33554365c53292952de796095bd16cffc25502971b5c17b3299ea0a69c4256f_1.png","title":"My title2","sha256hash":"c33554365c53292952de796095bd16cffc25502971b5c17b3299ea0a69c4256f"}]}```
+### `GET /images` 
+```
+< HTTP/1.1 206 Partial Content
+< Transfer-Encoding: chunked
+< Date: Tue, 23 Nov 2021 15:55:40 GMT
+< Server: Warp/3.3.17
+< Content-Type: application/json;charset=utf-8
+< Total-Count: 571
+< Accept-Ranges: createdAt
+< Content-Range: createdAt 2021-11-23T10%3A45%3A10.310676Z..2021-11-23T10%3A45%3A10.310676Z
+< Next-Range: createdAt 2021-11-23T10%3A45%3A10.310676Z;limit 1;offset 1;order desc
+<
+
+[{"path":"marketplace-images/d20906d82638fe30cef8e559e84ddbee4f4b965dd6a066e4c9d03d3295dadfff_1.png","createdAt":"2021-11-23T10:45:10.310676Z","id":22651,"title":"benchmark title","sha256hash":"d20906d82638fe30cef8e559e84ddbee4f4b965dd6a066e4c9d03d3295dadfff"}]
+```
+#### Pagination
+* Header `Total-Count` -- total amount of entries
+* Default number of entries in a page is 100
+* To get next page send a request with the header `Range: <nextRange>` where value of `<nextRange>` is from the `Next-Range` header.
+* Example with `curl`:
+```curl -X GET /images -vH 'Range: createdAt 2021-11-23T10%3A45%3A10.31487Z;limit 1;offset 1;order desc```
+
+
 ### `POST /images`
 ```curl -X POST /images -F "image=@Downloads/1.png" -F "title=My title2" ```
 * Response
