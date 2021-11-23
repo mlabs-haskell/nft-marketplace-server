@@ -1,6 +1,7 @@
 # nft-marketplace-server
 ## Images
 ### `GET /images` 
+Response with headers:
 ```
 < HTTP/1.1 206 Partial Content
 < Transfer-Encoding: chunked
