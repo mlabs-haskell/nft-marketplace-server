@@ -1,4 +1,4 @@
-module Api (marketplaceApi, Routes (..), ImageApi (..), PurchaseApi (..), AdminApi (..), ArtistApi (..)) where
+module Api (marketplaceApi, Routes (..), ImageApi (..), PurchaseApi (..), AdminApi (..), ArtistApi (..), ImagePaginationHeaders) where
 
 import Data.Text (Text)
 import Servant (
@@ -6,6 +6,9 @@ import Servant (
     Capture,
     Delete,
     Get,
+    GetPartialContent,
+    Header,
+    Headers,
     JSON,
     Post,
     Proxy (..),
@@ -15,9 +18,14 @@ import Servant (
  )
 import Servant.API.Generic (Generic, ToServantApi, genericApi, (:-))
 import Servant.Multipart (MultipartData, MultipartForm, Tmp)
+import Servant.Pagination
 import Servant.Server.Experimental.Auth (AuthServerData)
 
 import Api.Types
+
+type ImagePaginationHeaders =
+    Header "Total-Count" Int
+        ': PageHeaders '["createdAt"] ListImage
 
 data ImageApi route = ImageApi
     { uploadImage ::
@@ -25,11 +33,11 @@ data ImageApi route = ImageApi
             :- Summary "Create a new image returning its id."
             :> MultipartForm Tmp (MultipartData Tmp)
             :> Post '[JSON] UploadImageResponse
-    , -- TODO: pagination
-      listImages ::
+    , listImages ::
         route
             :- Summary "Get all images"
-            :> Get '[JSON] ListImagesResponse
+            :> Header "Range" (Ranges '["createdAt"] ListImage)
+            :> GetPartialContent '[JSON] (Headers ImagePaginationHeaders [ListImage])
     }
     deriving stock (Generic)
 

@@ -6,19 +6,21 @@ import Control.Monad.Reader (ask)
 import Crypto.Hash.SHA256 qualified as SHA256
 import Data.ByteString qualified as BS
 import Data.ByteString.Base16 qualified as Base16
-import Data.Maybe (isJust)
+import Data.Maybe (fromMaybe, isJust)
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.IO qualified as Text
-import Data.Time (getCurrentTime)
+import Data.Time (UTCTime, getCurrentTime)
 import Database.Esqueleto.Experimental
+import Database.Esqueleto.Pagination qualified as DbPagination
 import Database.Persist.Postgresql qualified as P
-import Servant (err422)
+import Servant (Headers, Proxy (..), addHeader, err422)
 import Servant.API.Generic (ToServant)
-import Servant.Multipart
+import Servant.Multipart (MultipartData, Tmp, fdFileName, fdPayload, files)
+import Servant.Pagination (Range (..), RangeOrder (..), Ranges, extractRange, getDefaultRange, returnRange)
 import Servant.Server.Generic (AsServerT, genericServerT)
 
-import Api (AdminApi (..), ArtistApi (..), ImageApi (..), PurchaseApi (..), Routes (..))
+import Api (AdminApi (..), ArtistApi (..), ImageApi (..), ImagePaginationHeaders, PurchaseApi (..), Routes (..))
 import Api.Error (JsonError (..), throwJsonError)
 import App (App, Env (..))
 
@@ -72,24 +74,51 @@ handlers = Routes{..}
         let imgPath = imageStoreFolder <> "/" <> imgHashHex <> "_" <> imgFilename
         liftIO $ BS.writeFile (Text.unpack imgPath) imgData
 
+        currentTime <- liftIO getCurrentTime
         liftIO $
             runDB dbConnPool $ do
-                a <- insert $ Image imageTitle imgPath imgHashHex
+                a <- insert $ Image imageTitle imgPath imgHashHex currentTime
                 liftIO $ print a
         pure $ UploadImageResponse imgHashHex
 
-    -- TODO: pagination
-    listImages :: App ListImagesResponse
-    listImages = do
+    listImages :: Maybe (Ranges '["createdAt"] ListImage) -> App (Headers ImagePaginationHeaders [ListImage])
+    listImages mrange = do
         Env{..} <- ask
 
-        dbImages <- liftIO $
-            runDB dbConnPool $ do
-                select . from $ table @Image
+        let listImageDefaultRange :: Range "createdAt" UTCTime
+            listImageDefaultRange = getDefaultRange (Proxy @ListImage)
 
-        let toApiImage (Image title path hash) = ListImage title path hash
-        let images = map (toApiImage . entityVal) dbImages
-        pure $ ListImagesResponse images
+        let range =
+                fromMaybe listImageDefaultRange (mrange >>= extractRange)
+
+        mimageCountValue <- liftIO $
+            runDB dbConnPool $ do
+                selectOne $ do
+                    img <- from $ table @Image
+                    pure $ count (img ^. ImageId)
+
+        let imageCount = maybe 0 (\(Value cnt) -> cnt) mimageCountValue
+
+        let query = DbPagination.emptyQuery
+        let (paginationOrder, desiredRange) = case rangeOrder range of
+                RangeDesc -> (DbPagination.Descend, DbPagination.Range Nothing (rangeValue range))
+                RangeAsc -> (DbPagination.Ascend, DbPagination.Range (rangeValue range) Nothing)
+        let pageSize = DbPagination.PageSize $ rangeLimit range
+
+        mpage <-
+            liftIO $
+                runDB dbConnPool $
+                    DbPagination.getPage query ImageCreatedAt pageSize paginationOrder desiredRange
+
+        let dbImages = maybe [] DbPagination.pageRecords mpage
+
+        let toApiImage dbImg =
+                let Image title path hash createdAt = entityVal dbImg
+                    imgId = fromSqlKey $ entityKey dbImg
+                 in ListImage imgId title path hash createdAt
+
+        let images = map toApiImage dbImages
+        addHeader imageCount <$> (returnRange range images)
 
     -- artist handlers
     artist :: ToServant ArtistApi (AsServerT App)
@@ -105,7 +134,7 @@ handlers = Routes{..}
                     where_ (artist' ^. ArtistPubKeyHash ==. val pubKeyHash)
                     pure artist'
 
-        Artist artistName _ <-
+        Artist artistName _ _ <-
             maybe
                 (throwJsonError err422 (JsonError "No artist with such pubKeyHash"))
                 (pure . entityVal)
@@ -119,7 +148,9 @@ handlers = Routes{..}
             runDB dbConnPool $ do
                 select . from $ table @Artist
 
-        let toApiArtist (Artist name pubKeyHash) = ListArtist name pubKeyHash
+        -- TODO: expose createdAt
+        -- TODO: expose id?
+        let toApiArtist (Artist name pubKeyHash _createdAt) = ListArtist name pubKeyHash
         let artists = map (toApiArtist . entityVal) dbArtists
         pure $ ListArtistsResponse artists
 
@@ -183,9 +214,11 @@ handlers = Routes{..}
         when (isJust artistExists) $
             throwJsonError err422 (JsonError "Artist already exists")
 
+        currentTime <- liftIO getCurrentTime
+
         liftIO $
             runDB dbConnPool $ do
-                a <- insert $ Artist name pubKeyHash
+                a <- insert $ Artist name pubKeyHash currentTime
                 liftIO $ print a
 
         pure $ CreateArtistResponse name pubKeyHash

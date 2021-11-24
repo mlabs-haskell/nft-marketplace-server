@@ -21,6 +21,8 @@ import Data.Aeson (FromJSON, ToJSON)
 import Data.Text (Text)
 import Data.Time (UTCTime)
 import GHC.Generics (Generic)
+import GHC.Int (Int64)
+import Servant.Pagination
 
 newtype UnlistImageResponse = UnlistImageResponse
     { message :: Text
@@ -41,12 +43,18 @@ newtype ListImagesResponse = ListImagesResponse
     deriving anyclass (ToJSON)
 
 data ListImage = ListImage
-    { title :: Text
+    { id :: Int64
+    , title :: Text
     , path :: Text
     , sha256hash :: Text
+    , createdAt :: UTCTime
     }
     deriving stock (Generic)
     deriving anyclass (ToJSON)
+
+instance HasPagination ListImage "createdAt" where
+    type RangeType ListImage "createdAt" = UTCTime
+    getFieldValue _ (ListImage _ _ _ _ createdAt) = createdAt
 
 newtype LookupArtistResponse = LookupArtistResponse
     { name :: Text
