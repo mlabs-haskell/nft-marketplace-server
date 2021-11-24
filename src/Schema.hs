@@ -17,11 +17,13 @@ Image
     title Text
     path Text
     sha256hash Text
+    createdAt UTCTime default=now()
     UniqueSha256hash sha256hash
     deriving Show
 Artist
     name Text
     pubKeyHash Text
+    createdAt UTCTime default=now()
     UniquePubKeyHash pubKeyHash
     UniqueName name
     deriving Show
