@@ -47,6 +47,7 @@ executable nft-marketplace-server
   ghc-options:
     -Wall -Wcompat -Wincomplete-uni-patterns -Wredundant-constraints
     -Wmissing-export-lists -Wmissing-deriving-strategies -Werror
+    -O2
 
   main-is:        Main.hs
   other-modules:
