@@ -74,10 +74,12 @@ executable nft-marketplace-server
     , mtl
     , optparse-applicative
     , persistent
+    , persistent-pagination
     , persistent-postgresql
     , resource-pool
     , servant
     , servant-multipart
+    , servant-pagination
     , servant-server
     , text
     , time

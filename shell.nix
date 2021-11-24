@@ -1,14 +1,34 @@
 { nixpkgs ? import <nixpkgs> {}, compiler ? "default", doBenchmark ? false }:
 
 let
+  servant-pagination-overlay = final: prev:
+    {
+      haskellPackages = prev.haskellPackages.override {
+        overrides = hself: hsuper: {
+          servant-pagination = hself.callHackageDirect {
+            pkg = "servant-pagination";
+            ver = "2.4.1";
+            sha256 = "0rz9i8lany191vl2232pr0dsy04wqlg55vw3wy3yq67s3v4xzzjq";
+          } {};
+        };
+      };
+    };
 
-  inherit (nixpkgs) pkgs;
+  _nixpkgs = import (nixpkgs.fetchFromGitHub {
+    owner = "NixOS";
+    repo = "nixpkgs";
+    rev = "2cf9db0e3d45b9d00f16f2836cb1297bcadc475e";
+    sha256 = "0sij1a5hlbigwcgx10dkw6mdbjva40wzz4scn0wchv7yyi9ph48l";
+  }) { overlays = [ servant-pagination-overlay ]; };
+
+  pkgs = _nixpkgs.pkgs;
 
   f = { mkDerivation, aeson, base, base16, bytestring
       , cryptohash-sha256, esqueleto, exceptions, filepath, http-types
       , lib, monad-logger, mtl, optparse-applicative, persistent
-      , persistent-postgresql, resource-pool, servant, servant-multipart
-      , servant-server, text, time, wai, wai-extra, wai-logger, warp
+      , persistent-pagination, persistent-postgresql, resource-pool
+      , servant, servant-multipart, servant-pagination, servant-server
+      , text, time, wai, wai-extra, wai-logger, warp
       }:
       mkDerivation {
         pname = "nft-marketplace-server";
@@ -19,9 +39,9 @@ let
         executableHaskellDepends = [
           aeson base base16 bytestring cryptohash-sha256 esqueleto exceptions
           filepath http-types monad-logger mtl optparse-applicative
-          persistent persistent-postgresql resource-pool servant
-          servant-multipart servant-server text time wai wai-extra wai-logger
-          warp
+          persistent persistent-pagination persistent-postgresql
+          resource-pool servant servant-multipart servant-pagination
+          servant-server text time wai wai-extra wai-logger warp
         ];
         license = "unknown";
         hydraPlatforms = lib.platforms.none;
