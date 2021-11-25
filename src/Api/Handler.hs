@@ -192,8 +192,12 @@ handlers = Routes{..}
                     where_ (purchase' ^. PurchaseImageHash ==. val imageHash)
                     pure purchase'
 
-        let toApiPurchases (Purchase imgHash authorPkh ownerPkh price wasAuctioned createdAt) = GetPurchase imgHash authorPkh ownerPkh price wasAuctioned createdAt
-        let purchases = map (toApiPurchases . entityVal) dbPurchases
+        let toApiPurchase dbPurchase =
+              let Purchase imgHash authorPkh ownerPkh price wasAuctioned createdAt = entityVal dbPurchase
+                  purchaseId = fromSqlKey $ entityKey dbPurchase
+              in GetPurchase purchaseId imgHash authorPkh ownerPkh price wasAuctioned createdAt
+
+        let purchases = map toApiPurchase dbPurchases
         pure $ GetPurchaseResponse purchases
 
     -- admin handlers

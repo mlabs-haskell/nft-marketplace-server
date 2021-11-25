@@ -104,7 +104,8 @@ data CreatePurchaseResponse = CreatePurchaseResponse
     deriving anyclass (ToJSON)
 
 data GetPurchase = GetPurchase
-    { imageHash :: Text
+    { id :: Int64
+    , imageHash :: Text
     , authorPubKeyHash :: Text
     , ownerPubKeyHash :: Text
     , price :: Text
