@@ -24,7 +24,7 @@ let
   pkgs = _nixpkgs.pkgs;
 
   f = { mkDerivation, aeson, base, base16, bytestring
-      , cryptohash-sha256, esqueleto, exceptions, filepath, http-types
+      , cryptohash-sha256, directory, esqueleto, exceptions, filepath, http-types
       , lib, monad-logger, mtl, optparse-applicative, persistent
       , persistent-pagination, persistent-postgresql, resource-pool
       , servant, servant-multipart, servant-pagination, servant-server
@@ -37,7 +37,7 @@ let
         isLibrary = false;
         isExecutable = true;
         executableHaskellDepends = [
-          aeson base base16 bytestring cryptohash-sha256 esqueleto exceptions
+          aeson base base16 bytestring cryptohash-sha256 directory esqueleto exceptions
           filepath http-types monad-logger mtl optparse-applicative
           persistent persistent-pagination persistent-postgresql
           resource-pool servant servant-multipart servant-pagination

@@ -3,11 +3,14 @@ module Main (main) where
 import Control.Monad.Catch (try)
 import Control.Monad.Except (ExceptT (..))
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Logger (runStderrLoggingT)
+-- import Control.Monad.Logger (runStderrLoggingT)
+import Control.Monad.Logger (runNoLoggingT)
 import Control.Monad.Reader (runReaderT)
 import Data.ByteString.Char8 qualified as BSC
 import Data.Text qualified as Text
 import Database.Persist.Postgresql (runMigration, runSqlPersistMPool, withPostgresqlPool)
+
+-- import Database.Persist.Sql.Migration (addMigration)
 import Network.Wai (Request)
 import Network.Wai.Handler.Warp qualified as W
 import Network.Wai.Logger (withStdoutLogger)
@@ -17,6 +20,7 @@ import Servant.API.Generic (ToServantApi)
 import Servant.Multipart (Tmp, defaultMultipartOptions, generalOptions)
 import Servant.Server.Experimental.Auth (AuthHandler)
 import Servant.Server.Generic (genericServerT)
+import System.Directory (createDirectoryIfMissing)
 
 import Api (Routes, marketplaceApi)
 import Api.Auth (authHandler)
@@ -55,103 +59,18 @@ main = do
     let imageFolderText = Text.pack imageFolder
     let connStr = BSC.pack dbConnectionString
 
-    runStderrLoggingT $
+    createDirectoryIfMissing False imageFolder
+
+    runNoLoggingT $
         withPostgresqlPool connStr 10 $ \pool ->
             liftIO $
                 flip runSqlPersistMPool pool $ do
-                    runMigration migrateAll
+                    runMigration $ do
+                        migrateAll
+                    -- addMigration True "CREATE INDEX CONCURRENTLY IF NOT EXISTS image_created_at_index ON image (created_at)"
+                    -- addMigration True "CREATE INDEX CONCURRENTLY IF NOT EXISTS artist_created_at_index ON artist (created_at)"
                     let env = Env pool imageFolderText
                     liftIO $
                         withStdoutLogger $ \logger -> do
                             let warpSettings = W.setPort serverPort $ W.setLogger logger W.defaultSettings
                             W.runSettings warpSettings (appService env)
-
-{-
-
-1. new person comeins in and uploads, upload and create artwork
-   index by hash
-
-2. authentican comes from wallet
-
-3. admin panel offchain to be able to unlist nft
-
-4. limit to jpg and png only
-   limit to the same resolution
-   516x516
-   limit to 2 megabytes
-
-5. purchase history (start with last purchase)
-
-6.
-
-Artwork
-  id
-  title
-  content
-  contentHash / nftId ?
-  authorId
-  ownerId
-  createdAt
-  updatedAt
-  imageId
-  -- thumbnailId
-  auctionStateId
-
-AuctionState
-  id
-  highestBid
-  highestBidderId
-  deadline
-  minimumBid
-
-Purchase ?
-  id
-  artworkId
-
-Image
-  id
-  path
-  resolution
-  thumbnailId
-
-Thumbnail
-  id
-  path
-  resolution
-
-User --TODO: how to authenticate -- TODO: roles?
-  id
-  name
-  pubKeyHash
-  createdAt
-  updatedAt
-
-PubKeyHash
-  id
-  hash
-
-GET /artwork -- paginated
-GET /artwork/<id>
-POST /artwork/<id>/unlist
-POST /artwork/create
-
-GET /image/<id>
-POST /image/upload
-
-???
-POST /artwork/<id>/set-price
-POST /artwork/<id>/buy
-POST /artwork/<id>/auction-open
-POST /artwork/<id>/auction-close
-POST /artwork/<id>/auction-bid
-
-GET /nft/<nftId>
-
-GET /nft/<nftId>/query-current-owner
-GET /nft/<nftId>/query-current-price
-GET /nft/query-all
-
-POST /nft/<nftId>/unlist
-or? POST /artwork/<id>/unlist ?
-
--}

@@ -62,11 +62,13 @@ executable nft-marketplace-server
 
   hs-source-dirs: src
   build-depends:
-    , aeson
+      aeson
     , base
     , base16
     , bytestring
+    , conduit
     , cryptohash-sha256
+    , directory
     , esqueleto
     , exceptions
     , filepath

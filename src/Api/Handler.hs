@@ -118,7 +118,7 @@ handlers = Routes{..}
                  in ListImage imgId title path hash createdAt
 
         let images = map toApiImage dbImages
-        addHeader imageCount <$> (returnRange range images)
+        addHeader imageCount <$> returnRange range images
 
     -- artist handlers
     artist :: ToServant ArtistApi (AsServerT App)
@@ -190,7 +190,6 @@ handlers = Routes{..}
         unless (isJust imageExists) $
             throwJsonError err422 (JsonError "Image does not exists")
 
-        -- TODO: transaction
         liftIO $
             runDB dbConnPool $ do
                 numDeleted <- deleteCount $ do
