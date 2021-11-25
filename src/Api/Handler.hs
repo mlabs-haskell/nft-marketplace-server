@@ -20,7 +20,7 @@ import Servant.Multipart (MultipartData, Tmp, fdFileName, fdPayload, files, iVal
 import Servant.Pagination (Range (..), RangeOrder (..), Ranges, extractRange, getDefaultRange, returnRange)
 import Servant.Server.Generic (AsServerT, genericServerT)
 
-import Api (AdminApi (..), ArtistApi (..), ImageApi (..), ImagePaginationHeaders, PurchaseApi (..), Routes (..))
+import Api (AdminApi (..), ArtistApi (..), ImageApi (..), ImagePaginationHeaders, PurchaseApi (..), Routes (..), ArtistPaginationHeaders)
 import Api.Error (JsonError (..), throwJsonError)
 import App (App, Env (..))
 
@@ -141,18 +141,41 @@ handlers = Routes{..}
                 martist
         pure (LookupArtistResponse artistName)
 
-    listArtists :: App ListArtistsResponse
-    listArtists = do
+    listArtists :: Maybe (Ranges '["createdAt"] ListArtist) -> App (Headers ArtistPaginationHeaders [ListArtist])
+    listArtists mrange = do
         Env{..} <- ask
-        dbArtists <- liftIO $
-            runDB dbConnPool $ do
-                select . from $ table @Artist
 
-        -- TODO: expose createdAt
-        -- TODO: expose id?
-        let toApiArtist (Artist name pubKeyHash _createdAt) = ListArtist name pubKeyHash
-        let artists = map (toApiArtist . entityVal) dbArtists
-        pure $ ListArtistsResponse artists
+        let listArtistDefaultRange :: Range "createdAt" UTCTime
+            listArtistDefaultRange = getDefaultRange (Proxy @ListArtist)
+
+        let range =
+                fromMaybe listArtistDefaultRange (mrange >>= extractRange)
+
+        martistCountValue <- liftIO $
+            runDB dbConnPool $ do
+                selectOne $ do
+                    artist' <- from $ table @Artist
+                    pure $ count (artist' ^. ArtistId)
+        let artistCount = maybe 0 (\(Value cnt) -> cnt) martistCountValue
+
+        let query = DbPagination.emptyQuery
+        let (paginationOrder, desiredRange) = case rangeOrder range of
+                RangeDesc -> (DbPagination.Descend, DbPagination.Range Nothing (rangeValue range))
+                RangeAsc -> (DbPagination.Ascend, DbPagination.Range (rangeValue range) Nothing)
+        let pageSize = DbPagination.PageSize $ rangeLimit range
+
+        mpage <- liftIO $ runDB dbConnPool $
+          DbPagination.getPage query ArtistCreatedAt pageSize paginationOrder desiredRange
+
+        let dbArtists = maybe [] DbPagination.pageRecords mpage
+
+        let toApiArtist dbArtist =
+              let Artist name pubKeyHash createdAt = entityVal dbArtist
+                  artistId = fromSqlKey $ entityKey dbArtist
+              in ListArtist artistId name pubKeyHash createdAt
+
+        let artists = map toApiArtist dbArtists
+        addHeader artistCount <$> returnRange range artists
 
     -- purchase handlers
     purchase :: ToServant PurchaseApi (AsServerT App)

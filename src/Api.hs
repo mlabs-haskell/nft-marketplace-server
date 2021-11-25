@@ -1,4 +1,4 @@
-module Api (marketplaceApi, Routes (..), ImageApi (..), PurchaseApi (..), AdminApi (..), ArtistApi (..), ImagePaginationHeaders) where
+module Api (marketplaceApi, Routes (..), ImageApi (..), PurchaseApi (..), AdminApi (..), ArtistApi (..), ImagePaginationHeaders, ArtistPaginationHeaders) where
 
 import Data.Text (Text)
 import Servant (
@@ -27,6 +27,10 @@ type ImagePaginationHeaders =
     Header "Total-Count" Int
         ': PageHeaders '["createdAt"] ListImage
 
+type ArtistPaginationHeaders =
+    Header "Total-Count" Int
+        ': PageHeaders '["createdAt"] ListArtist
+
 data ImageApi route = ImageApi
     { uploadImage ::
         route
@@ -50,7 +54,8 @@ data ArtistApi route = ArtistApi
     , listArtists ::
         route
             :- Summary "Get all artists"
-            :> Get '[JSON] ListArtistsResponse
+            :> Header "Range" (Ranges '["createdAt"] ListArtist)
+            :> GetPartialContent '[JSON] (Headers ArtistPaginationHeaders [ListArtist])
     }
     deriving stock (Generic)
 

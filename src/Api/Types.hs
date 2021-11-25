@@ -3,11 +3,9 @@
 module Api.Types (
     UnlistImageResponse (..),
     UploadImageResponse (..),
-    ListImagesResponse (..),
     ListImage (..),
     LookupArtistResponse (..),
     ListArtist (..),
-    ListArtistsResponse (..),
     CreateArtistRequest (..),
     CreateArtistResponse (..),
     CreatePurchaseRequest (..),
@@ -36,12 +34,6 @@ newtype UploadImageResponse = UploadImageResponse
     deriving stock (Generic)
     deriving anyclass (ToJSON)
 
-newtype ListImagesResponse = ListImagesResponse
-    { images :: [ListImage]
-    }
-    deriving stock (Generic)
-    deriving anyclass (ToJSON)
-
 data ListImage = ListImage
     { id :: Int64
     , title :: Text
@@ -63,17 +55,17 @@ newtype LookupArtistResponse = LookupArtistResponse
     deriving anyclass (ToJSON)
 
 data ListArtist = ListArtist
-    { name :: Text
+    { id :: Int64
+    , name :: Text
     , pubKeyHash :: Text
+    , createdAt :: UTCTime
     }
     deriving stock (Generic)
     deriving anyclass (ToJSON)
 
-newtype ListArtistsResponse = ListArtistsResponse
-    { artists :: [ListArtist]
-    }
-    deriving stock (Generic)
-    deriving anyclass (ToJSON)
+instance HasPagination ListArtist "createdAt" where
+    type RangeType ListArtist "createdAt" = UTCTime
+    getFieldValue _ (ListArtist _ _ _ createdAt) = createdAt
 
 data CreateArtistRequest = CreateArtistRequest
     { name :: Text
