@@ -16,7 +16,7 @@ import Database.Esqueleto.Pagination qualified as DbPagination
 import Database.Persist.Postgresql qualified as P
 import Servant (Headers, Proxy (..), addHeader, err422)
 import Servant.API.Generic (ToServant)
-import Servant.Multipart (MultipartData, Tmp, fdFileName, fdPayload, files)
+import Servant.Multipart (MultipartData, Tmp, fdFileName, fdPayload, files, iValue, inputs)
 import Servant.Pagination (Range (..), RangeOrder (..), Ranges, extractRange, getDefaultRange, returnRange)
 import Servant.Server.Generic (AsServerT, genericServerT)
 
