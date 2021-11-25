@@ -20,7 +20,6 @@ authHandler env = mkAuthHandler handler
     handler req = do
         let Env{..} = env
         authHeader <- maybe throwUnauthorized pure . lookup "Authorization" $ requestHeaders req
-        -- TODO: change to `decodeUft8'`
         authHeaderText <- either (const throwUnauthorized) pure $ decodeUtf8' authHeader
         adminToken <- liftIO $
             flip P.runSqlPersistMPool dbConnPool $ do
