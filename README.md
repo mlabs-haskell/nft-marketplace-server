@@ -31,7 +31,25 @@ Response with headers:
 
 ## Artists
 ### `GET /artists`
-* Response ```{"artists":[{"name":"a","pubKeyHash":"b"},{"name":"ac","pubKeyHash":"bc"},{"name":"abc","pubKeyHash":"abc"}]}```
+Response with headers:
+```
+< HTTP/1.1 206 Partial Content
+< Transfer-Encoding: chunked
+< Date: Thu, 25 Nov 2021 13:17:15 GMT
+< Server: Warp/3.3.17
+< Content-Type: application/json;charset=utf-8
+< Total-Count: 1
+< Accept-Ranges: createdAt
+< Content-Range: createdAt 2021-11-25T13%3A16%3A49.023987Z..2021-11-25T13%3A16%3A49.023987Z
+< Next-Range: createdAt 2021-11-25T13%3A16%3A49.023987Z;limit 100;offset 1;order desc
+<
+
+[{"createdAt":"2021-11-25T13:16:49.023987Z","name":"abc","pubKeyHash":"abc","id":4}]
+```
+
+#### Pagination
+See image pagination.
+
 ### `GET /artists/<pubKeyHash>`
 Get artist name by the given `pubKeyHash`.
 * Response ```{"name":"a"}```
