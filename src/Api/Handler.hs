@@ -20,7 +20,7 @@ import Servant.Multipart (MultipartData, Tmp, fdFileName, fdPayload, files, iVal
 import Servant.Pagination (Range (..), RangeOrder (..), Ranges, extractRange, getDefaultRange, returnRange)
 import Servant.Server.Generic (AsServerT, genericServerT)
 
-import Api (AdminApi (..), ArtistApi (..), ImageApi (..), ImagePaginationHeaders, PurchaseApi (..), Routes (..), ArtistPaginationHeaders)
+import Api (AdminApi (..), ArtistApi (..), ArtistPaginationHeaders, ImageApi (..), ImagePaginationHeaders, PurchaseApi (..), Routes (..))
 import Api.Error (JsonError (..), throwJsonError)
 import App (App, Env (..))
 
@@ -164,15 +164,17 @@ handlers = Routes{..}
                 RangeAsc -> (DbPagination.Ascend, DbPagination.Range (rangeValue range) Nothing)
         let pageSize = DbPagination.PageSize $ rangeLimit range
 
-        mpage <- liftIO $ runDB dbConnPool $
-          DbPagination.getPage query ArtistCreatedAt pageSize paginationOrder desiredRange
+        mpage <-
+            liftIO $
+                runDB dbConnPool $
+                    DbPagination.getPage query ArtistCreatedAt pageSize paginationOrder desiredRange
 
         let dbArtists = maybe [] DbPagination.pageRecords mpage
 
         let toApiArtist dbArtist =
-              let Artist name pubKeyHash createdAt = entityVal dbArtist
-                  artistId = fromSqlKey $ entityKey dbArtist
-              in ListArtist artistId name pubKeyHash createdAt
+                let Artist name pubKeyHash createdAt = entityVal dbArtist
+                    artistId = fromSqlKey $ entityKey dbArtist
+                 in ListArtist artistId name pubKeyHash createdAt
 
         let artists = map toApiArtist dbArtists
         addHeader artistCount <$> returnRange range artists
@@ -193,9 +195,9 @@ handlers = Routes{..}
                     pure purchase'
 
         let toApiPurchase dbPurchase =
-              let Purchase imgHash authorPkh ownerPkh price wasAuctioned createdAt = entityVal dbPurchase
-                  purchaseId = fromSqlKey $ entityKey dbPurchase
-              in GetPurchase purchaseId imgHash authorPkh ownerPkh price wasAuctioned createdAt
+                let Purchase imgHash authorPkh ownerPkh price wasAuctioned createdAt = entityVal dbPurchase
+                    purchaseId = fromSqlKey $ entityKey dbPurchase
+                 in GetPurchase purchaseId imgHash authorPkh ownerPkh price wasAuctioned createdAt
 
         let purchases = map toApiPurchase dbPurchases
         pure $ GetPurchaseResponse purchases
