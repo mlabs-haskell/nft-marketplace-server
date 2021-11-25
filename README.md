@@ -56,7 +56,7 @@ Get artist name by the given `pubKeyHash`.
 
 ## Purchases
 ### `GET /purchases/<imageHash>`
-* Response ```{"purchases":[{"wasAuctioned":true,"authorPubKeyHash":"b","createdAt":"2021-11-17T12:41:28.165871Z","imageHash":"aaa","price":"d","ownerPubKeyHash":"c"}]}```
+* Response ```{"purchases":[{"wasAuctioned":true,"authorPubKeyHash":"b","createdAt":"2021-11-17T12:41:28.165871Z","imageHash":"aaa","id":9,"price":"d","ownerPubKeyHash":"c"}]}```
 
 ## Admin API
 Auth by `Authorization: <token>` header.
