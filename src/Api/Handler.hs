@@ -91,13 +91,11 @@ handlers = Routes{..}
         let range =
                 fromMaybe listImageDefaultRange (mrange >>= extractRange)
 
-        mimageCountValue <- liftIO $
-            runDB dbConnPool $ do
-                selectOne $ do
-                    img <- from $ table @Image
-                    pure $ count (img ^. ImageId)
-
-        let imageCount = maybe 0 (\(Value cnt) -> cnt) mimageCountValue
+        (imageCountValue :: [Single Int]) <-
+            liftIO $
+                runDB dbConnPool $
+                    rawSql "SELECT reltuples FROM pg_class WHERE relname = 'image'" []
+        let (imageCount :: Int) = unSingle $ head imageCountValue
 
         let query = DbPagination.emptyQuery
         let (paginationOrder, desiredRange) = case rangeOrder range of
@@ -151,12 +149,11 @@ handlers = Routes{..}
         let range =
                 fromMaybe listArtistDefaultRange (mrange >>= extractRange)
 
-        martistCountValue <- liftIO $
-            runDB dbConnPool $ do
-                selectOne $ do
-                    artist' <- from $ table @Artist
-                    pure $ count (artist' ^. ArtistId)
-        let artistCount = maybe 0 (\(Value cnt) -> cnt) martistCountValue
+        (artistCountValue :: [Single Int]) <-
+            liftIO $
+                runDB dbConnPool $
+                    rawSql "SELECT reltuples FROM pg_class WHERE relname = 'artist'" []
+        let (artistCount :: Int) = unSingle $ head artistCountValue
 
         let query = DbPagination.emptyQuery
         let (paginationOrder, desiredRange) = case rangeOrder range of
