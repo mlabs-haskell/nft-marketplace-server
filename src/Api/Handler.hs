@@ -16,7 +16,7 @@ import Database.Esqueleto.Pagination qualified as DbPagination
 import Database.Persist.Postgresql qualified as P
 import Servant (Headers, Proxy (..), addHeader, err422)
 import Servant.API.Generic (ToServant)
-import Servant.Multipart (MultipartData, Tmp, fdFileName, fdPayload, files, iValue, inputs)
+import Servant.Multipart (MultipartData, Tmp, fdFileName, fdPayload, files, lookupInput, inputs)
 import Servant.Pagination (Range (..), RangeOrder (..), Ranges, extractRange, getDefaultRange, returnRange)
 import Servant.Server.Generic (AsServerT, genericServerT)
 
@@ -57,8 +57,14 @@ handlers = Routes{..}
         let imgHashHex = Base16.encodeBase16 imgHash
         liftIO $ Text.putStrLn imgHashHex
 
-        -- let imageTitle = either ... pure lookupInput "title" multipartData
-        let imageTitle = iValue $ head $ inputs multipartData
+        let throwTitle = throwJsonError err422 (JsonError "Missing title")
+        let throwDesc = throwJsonError err422 (JsonError "Missing description")
+
+        let getInput inputName onError =
+              either (const onError) pure $ lookupInput inputName multipartData
+
+        imageTitle <- getInput "title" throwTitle
+        imageDesc <- getInput "description" throwDesc
 
         Env{..} <- ask
 
@@ -77,7 +83,7 @@ handlers = Routes{..}
         currentTime <- liftIO getCurrentTime
         liftIO $
             runDB dbConnPool $ do
-                a <- insert $ Image imageTitle imgPath imgHashHex currentTime
+                a <- insert $ Image imageTitle imageDesc imgPath imgHashHex currentTime
                 liftIO $ print a
         pure $ UploadImageResponse imgHashHex
 
@@ -111,9 +117,9 @@ handlers = Routes{..}
         let dbImages = maybe [] DbPagination.pageRecords mpage
 
         let toApiImage dbImg =
-                let Image title path hash createdAt = entityVal dbImg
+                let Image title description path hash createdAt = entityVal dbImg
                     imgId = fromSqlKey $ entityKey dbImg
-                 in ListImage imgId title path hash createdAt
+                 in ListImage imgId title description path hash createdAt
 
         let images = map toApiImage dbImages
         addHeader imageCount <$> returnRange range images
