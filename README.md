@@ -14,7 +14,7 @@ Response with headers:
 < Next-Range: createdAt 2021-11-23T10%3A45%3A10.310676Z;limit 1;offset 1;order desc
 <
 
-[{"path":"marketplace-images/d20906d82638fe30cef8e559e84ddbee4f4b965dd6a066e4c9d03d3295dadfff_1.png","createdAt":"2021-11-23T10:45:10.310676Z","id":22651,"title":"benchmark title","sha256hash":"d20906d82638fe30cef8e559e84ddbee4f4b965dd6a066e4c9d03d3295dadfff"}]
+[{"path":"marketplace-images/d20906d82638fe30cef8e559e84ddbee4f4b965dd6a066e4c9d03d3295dadfff_1.png","createdAt":"2021-11-23T10:45:10.310676Z","id":22651,"title":"benchmark title","description":"image description","sha256hash":"d20906d82638fe30cef8e559e84ddbee4f4b965dd6a066e4c9d03d3295dadfff"}]
 ```
 #### Pagination
 * Header `Total-Count` -- total amount of entries
@@ -25,7 +25,7 @@ Response with headers:
 
 
 ### `POST /images`
-```curl -X POST /images -F "image=@Downloads/1.png" -F "title=My title2" ```
+```curl -X POST /images -F "image=@Downloads/1.png" -F "title=My title2" -F "description=image description"```
 * Response
  ```{"sha256hash":"c33554365c53292952de796095bd16cffc25502971b5c17b3299ea0a69c4256f"}```
 
