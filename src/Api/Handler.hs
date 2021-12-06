@@ -16,7 +16,7 @@ import Database.Esqueleto.Pagination qualified as DbPagination
 import Database.Persist.Postgresql qualified as P
 import Servant (Headers, Proxy (..), addHeader, err422)
 import Servant.API.Generic (ToServant)
-import Servant.Multipart (MultipartData, Tmp, fdFileName, fdPayload, files, lookupInput, inputs)
+import Servant.Multipart (MultipartData, Tmp, fdFileName, fdPayload, files, inputs, lookupInput)
 import Servant.Pagination (Range (..), RangeOrder (..), Ranges, extractRange, getDefaultRange, returnRange)
 import Servant.Server.Generic (AsServerT, genericServerT)
 
@@ -61,7 +61,7 @@ handlers = Routes{..}
         let throwDesc = throwJsonError err422 (JsonError "Missing description")
 
         let getInput inputName onError =
-              either (const onError) pure $ lookupInput inputName multipartData
+                either (const onError) pure $ lookupInput inputName multipartData
 
         imageTitle <- getInput "title" throwTitle
         imageDesc <- getInput "description" throwDesc
