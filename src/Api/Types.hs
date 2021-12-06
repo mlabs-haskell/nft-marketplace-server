@@ -37,6 +37,7 @@ newtype UploadImageResponse = UploadImageResponse
 data ListImage = ListImage
     { id :: Int64
     , title :: Text
+    , description :: Text
     , path :: Text
     , sha256hash :: Text
     , createdAt :: UTCTime
@@ -46,7 +47,7 @@ data ListImage = ListImage
 
 instance HasPagination ListImage "createdAt" where
     type RangeType ListImage "createdAt" = UTCTime
-    getFieldValue _ (ListImage _ _ _ _ createdAt) = createdAt
+    getFieldValue _ (ListImage _ _ _ _ _ createdAt) = createdAt
 
 newtype LookupArtistResponse = LookupArtistResponse
     { name :: Text

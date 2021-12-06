@@ -15,6 +15,7 @@ share
     [persistLowerCase|
 Image
     title Text
+    description Text
     path Text
     sha256hash Text
     createdAt UTCTime default=now()
