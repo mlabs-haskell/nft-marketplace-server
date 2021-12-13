@@ -13,6 +13,11 @@ module Api.Types (
     GetPurchase (..),
     GetPurchaseResponse (..),
     DeleteArtistResponse (..),
+    NftSetPriceRequest (..),
+    NftSetPriceResponse (..),
+    NftBuyRequest (..),
+    NftBuyResponse (..),
+    DemoUserData (..),
 ) where
 
 import Data.Aeson (FromJSON, ToJSON)
@@ -127,3 +132,35 @@ newtype DeleteArtistResponse = DeleteArtistResponse
     }
     deriving stock (Generic)
     deriving anyclass (ToJSON)
+
+newtype NftSetPriceRequest = NftSetPriceRequest
+    { nftId :: Text
+    }
+    deriving stock (Generic)
+    deriving anyclass (FromJSON)
+
+data NftSetPriceResponse = NftSetPriceResponse
+    { nftId :: Text
+    , message :: Text
+    }
+    deriving stock (Generic)
+    deriving anyclass (ToJSON)
+
+newtype NftBuyRequest = NftBuyRequest
+    { nftId :: Text
+    }
+    deriving stock (Generic)
+    deriving anyclass (FromJSON)
+
+data NftBuyResponse = NftBuyResponse
+    { nftId :: Text
+    , message :: Text
+    }
+    deriving stock (Generic)
+    deriving anyclass (ToJSON)
+
+data DemoUserData = DemoUserData
+    { name :: Text
+    , password :: Text
+    }
+    deriving stock (Show)

@@ -1,8 +1,9 @@
-module Api (marketplaceApi, Routes (..), ImageApi (..), PurchaseApi (..), AdminApi (..), ArtistApi (..), ImagePaginationHeaders, ArtistPaginationHeaders) where
+module Api (marketplaceApi, Routes (..), ImageApi (..), PurchaseApi (..), AdminApi (..), ArtistApi (..), DemoApi (..), ImagePaginationHeaders, ArtistPaginationHeaders) where
 
 import Data.Text (Text)
 import Servant (
     AuthProtect,
+    BasicAuth,
     Capture,
     Delete,
     Get,
@@ -96,11 +97,28 @@ data AdminApi route = AdminApi
     }
     deriving stock (Generic)
 
+data DemoApi route = DemoApi
+    { nftSetPrice ::
+        route
+          :- "nft_set_price"
+          :> Summary "Set NFT price"
+          :> ReqBody '[JSON] NftSetPriceRequest
+          :> Post '[JSON] NftSetPriceResponse
+    , nftBuy ::
+        route
+          :- "nft_buy"
+          :> Summary "Buy NFT"
+          :> ReqBody '[JSON] NftBuyRequest
+          :> Post '[JSON] NftBuyResponse
+    }
+    deriving stock (Generic)
+
 data Routes route = Routes
     { image :: route :- "images" :> ToServantApi ImageApi
     , artist :: route :- "artists" :> ToServantApi ArtistApi
     , purchase :: route :- "purchases" :> ToServantApi PurchaseApi
     , admin :: route :- "admin" :> AuthProtect "header-auth" :> ToServantApi AdminApi
+    , demo :: route :- "demo" :> BasicAuth "demo user auth" DemoUserData :> ToServantApi DemoApi
     }
     deriving stock (Generic)
 

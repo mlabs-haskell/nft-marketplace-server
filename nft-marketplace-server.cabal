@@ -53,6 +53,7 @@ executable nft-marketplace-server
   other-modules:
     Api
     Api.Auth
+    Api.DemoUserAuth
     Api.Error
     Api.Handler
     Api.Types

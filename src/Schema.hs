@@ -40,4 +40,9 @@ AdminToken
     token Text
     UniqueToken token
     deriving Show
+DemoUser
+    name Text
+    token Text
+    UniqueDemoUserName name
+    deriving Show
 |]

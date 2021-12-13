@@ -16,7 +16,7 @@ import Network.Wai (Request)
 import Network.Wai.Handler.Warp qualified as W
 import Network.Wai.Logger (withStdoutLogger)
 import Network.Wai.Parse (defaultParseRequestBodyOptions, setMaxRequestFileSize)
-import Servant (Application, Context (..), Handler (..), Proxy (..), ServerT, hoistServerWithContext, serveWithContext)
+import Servant (Application, Context (..), Handler (..), Proxy (..), ServerT, hoistServerWithContext, serveWithContext, BasicAuthCheck)
 import Servant.API.Generic (ToServantApi)
 import Servant.Multipart (Tmp, defaultMultipartOptions, generalOptions)
 import Servant.Server.Experimental.Auth (AuthHandler)
@@ -24,7 +24,9 @@ import Servant.Server.Generic (genericServerT)
 import System.Directory (createDirectoryIfMissing)
 
 import Api (Routes, marketplaceApi)
+import Api.Types (DemoUserData)
 import Api.Auth (authHandler)
+import Api.DemoUserAuth (demoUserAuthHandler)
 import Api.Handler (handlers)
 import App (App (..), Env (..))
 import Options (Options (..))
@@ -34,7 +36,7 @@ import Schema (migrateAll)
 appService :: Env -> Application
 appService env = serveWithContext marketplaceApi ctx appServer
   where
-    ctx = authHandler env :. multipartOpts :. EmptyContext
+    ctx = demoUserAuthHandler env :. authHandler env :. multipartOpts :. EmptyContext
 
     multipartOpts =
         (defaultMultipartOptions (Proxy :: Proxy Tmp))
@@ -51,7 +53,7 @@ appService env = serveWithContext marketplaceApi ctx appServer
     appServer :: ServerT (ToServantApi Routes) Handler
     appServer = hoistServerWithContext marketplaceApi hoistCtx hoistApp appServerT
 
-    hoistCtx :: Proxy '[AuthHandler Request ()]
+    hoistCtx :: Proxy '[AuthHandler Request (), BasicAuthCheck DemoUserData]
     hoistCtx = Proxy
 
 main :: IO ()
