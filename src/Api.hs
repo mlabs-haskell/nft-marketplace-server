@@ -100,16 +100,16 @@ data AdminApi route = AdminApi
 data DemoApi route = DemoApi
     { nftSetPrice ::
         route
-          :- "nft_set_price"
-          :> Summary "Set NFT price"
-          :> ReqBody '[JSON] NftSetPriceRequest
-          :> Post '[JSON] NftSetPriceResponse
+            :- "nft_set_price"
+            :> Summary "Set NFT price"
+            :> ReqBody '[JSON] NftSetPriceRequest
+            :> Post '[JSON] NftSetPriceResponse
     , nftBuy ::
         route
-          :- "nft_buy"
-          :> Summary "Buy NFT"
-          :> ReqBody '[JSON] NftBuyRequest
-          :> Post '[JSON] NftBuyResponse
+            :- "nft_buy"
+            :> Summary "Buy NFT"
+            :> ReqBody '[JSON] NftBuyRequest
+            :> Post '[JSON] NftBuyResponse
     }
     deriving stock (Generic)
 

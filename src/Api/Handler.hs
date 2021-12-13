@@ -20,7 +20,7 @@ import Servant.Multipart (MultipartData, Tmp, fdFileName, fdPayload, files, inpu
 import Servant.Pagination (Range (..), RangeOrder (..), Ranges, extractRange, getDefaultRange, returnRange)
 import Servant.Server.Generic (AsServerT, genericServerT)
 
-import Api (AdminApi (..), ArtistApi (..), ArtistPaginationHeaders, ImageApi (..), ImagePaginationHeaders, PurchaseApi (..), Routes (..), DemoApi (..))
+import Api (AdminApi (..), ArtistApi (..), ArtistPaginationHeaders, DemoApi (..), ImageApi (..), ImagePaginationHeaders, PurchaseApi (..), Routes (..))
 import Api.Error (JsonError (..), throwJsonError)
 import App (App, Env (..))
 
@@ -290,16 +290,19 @@ handlers = Routes{..}
 
     -- admin handlers
     demo :: DemoUserData -> ToServant DemoApi (AsServerT App)
-    demo demoUser = genericServerT DemoApi { nftSetPrice = nftSetPrice demoUser
-                                           , nftBuy = nftBuy demoUser
-                                           }
+    demo demoUser =
+        genericServerT
+            DemoApi
+                { nftSetPrice = nftSetPrice demoUser
+                , nftBuy = nftBuy demoUser
+                }
 
     nftSetPrice :: DemoUserData -> NftSetPriceRequest -> App NftSetPriceResponse
     nftSetPrice demoUser _req = do
-      liftIO $ print demoUser
-      pure $ NftSetPriceResponse "" ""
+        liftIO $ print demoUser
+        pure $ NftSetPriceResponse "" ""
 
     nftBuy :: DemoUserData -> NftBuyRequest -> App NftBuyResponse
     nftBuy demoUser _req = do
-      liftIO $ print demoUser
-      pure $ NftBuyResponse "" ""
+        liftIO $ print demoUser
+        pure $ NftBuyResponse "" ""
