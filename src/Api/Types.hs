@@ -133,8 +133,9 @@ newtype DeleteArtistResponse = DeleteArtistResponse
     deriving stock (Generic)
     deriving anyclass (ToJSON)
 
-newtype NftSetPriceRequest = NftSetPriceRequest
+data NftSetPriceRequest = NftSetPriceRequest
     { nftId :: Text
+    , price :: Maybe Integer
     }
     deriving stock (Generic)
     deriving anyclass (FromJSON)
@@ -146,8 +147,10 @@ data NftSetPriceResponse = NftSetPriceResponse
     deriving stock (Generic)
     deriving anyclass (ToJSON)
 
-newtype NftBuyRequest = NftBuyRequest
+data NftBuyRequest = NftBuyRequest
     { nftId :: Text
+    , price :: Integer
+    , newPrice :: Maybe Integer
     }
     deriving stock (Generic)
     deriving anyclass (FromJSON)
