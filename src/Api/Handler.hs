@@ -304,6 +304,6 @@ handlers = Routes{..}
         pure $ NftSetPriceResponse nftId "set price successful"
 
     nftBuy :: DemoUserData -> NftBuyRequest -> App NftBuyResponse
-    nftBuy demoUser _req = do
+    nftBuy demoUser (NftBuyRequest nftId price newPrice) = do
         liftIO $ print demoUser
         pure $ NftBuyResponse "" ""
