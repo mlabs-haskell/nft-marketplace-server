@@ -21,11 +21,15 @@ Image
     createdAt UTCTime default=now()
     UniqueSha256hash sha256hash
     deriving Show
+Avatar
+    path Text
+    deriving Show
 Artist
     name Text
     pubKeyHash Text
     createdAt UTCTime default=now()
     UniquePubKeyHash pubKeyHash
+    avatarId AvatarId Maybe
     UniqueName name
     deriving Show
 Purchase

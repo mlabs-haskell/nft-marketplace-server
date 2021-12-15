@@ -138,7 +138,7 @@ handlers = Routes{..}
                     where_ (artist' ^. ArtistPubKeyHash ==. val pubKeyHash)
                     pure artist'
 
-        Artist artistName _ _ <-
+        Artist artistName _ _ _ <-
             maybe
                 (throwJsonError err422 (JsonError "No artist with such pubKeyHash"))
                 (pure . entityVal)
@@ -175,7 +175,7 @@ handlers = Routes{..}
         let dbArtists = maybe [] DbPagination.pageRecords mpage
 
         let toApiArtist dbArtist =
-                let Artist name pubKeyHash createdAt = entityVal dbArtist
+                let Artist name pubKeyHash createdAt _mavatarId = entityVal dbArtist
                     artistId = fromSqlKey $ entityKey dbArtist
                  in ListArtist artistId name pubKeyHash createdAt
 
@@ -249,7 +249,7 @@ handlers = Routes{..}
 
         liftIO $
             runDB dbConnPool $ do
-                a <- insert $ Artist name pubKeyHash currentTime
+                a <- insert $ Artist name pubKeyHash currentTime Nothing
                 liftIO $ print a
 
         pure $ CreateArtistResponse name pubKeyHash
