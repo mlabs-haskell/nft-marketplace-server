@@ -81,6 +81,12 @@ data AdminApi route = AdminApi
             :> Summary "Create a new artist"
             :> ReqBody '[JSON] CreateArtistRequest
             :> Post '[JSON] CreateArtistResponse
+    , uploadAvatar ::
+        route
+            :- "upload_avatar"
+            :> Summary "Create avatar for an artist"
+            :> MultipartForm Tmp (MultipartData Tmp)
+            :> Post '[JSON] UploadAvatarResponse
     , deleteArtist ::
         route
             :- "delete_artist"

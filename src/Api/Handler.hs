@@ -254,6 +254,23 @@ handlers = Routes{..}
 
         pure $ CreateArtistResponse name pubKeyHash
 
+    uploadAvatar :: MultipartData Tmp -> App UploadAvatarResponse
+    uploadAvatar multipartData = do
+        when (null $ files multipartData) $
+            throwJsonError err422 (JsonError "No files uploaded")
+
+        liftIO . print . length $ files multipartData
+        let img = head $ files multipartData
+        let imgTmpPath = fdPayload img
+        let imgFilename = fdFileName img
+
+        liftIO $ print imgTmpPath
+        liftIO $ print imgFilename
+
+        imgData <- liftIO . BS.readFile $ imgTmpPath
+
+        Env{..} <- ask
+
     deleteArtist :: Text -> App DeleteArtistResponse
     deleteArtist pubKeyHash = do
         Env{..} <- ask
