@@ -26,8 +26,8 @@ import App (App)
 import Env (Env (..))
 
 import Api.Types
-import Schema
 import Ipfs qualified
+import Schema
 
 handlers :: Routes (AsServerT App)
 handlers = Routes{..}

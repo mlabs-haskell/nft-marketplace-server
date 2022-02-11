@@ -12,18 +12,19 @@ import Data.Text qualified as Text
 import Database.Persist.Postgresql (runMigration, runSqlPersistMPool, withPostgresqlPool)
 
 -- import Database.Persist.Sql.Migration (addMigration)
+
+import Network.HTTP.Client qualified as HttpClient
 import Network.Wai (Request)
 import Network.Wai.Handler.Warp qualified as W
 import Network.Wai.Logger (withStdoutLogger)
 import Network.Wai.Parse (defaultParseRequestBodyOptions, setMaxRequestFileSize)
 import Servant (Application, Context (..), Handler (..), Proxy (..), ServerT, hoistServerWithContext, serveWithContext)
 import Servant.API.Generic (ToServantApi)
+import Servant.Client (mkClientEnv, parseBaseUrl)
 import Servant.Multipart (Tmp, defaultMultipartOptions, generalOptions)
 import Servant.Server.Experimental.Auth (AuthHandler)
 import Servant.Server.Generic (genericServerT)
 import System.Directory (createDirectoryIfMissing)
-import Network.HTTP.Client qualified as HttpClient
-import Servant.Client (mkClientEnv, parseBaseUrl)
 
 import Api (Routes, marketplaceApi)
 import Api.Auth (authHandler)

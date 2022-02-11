@@ -1,5 +1,5 @@
 module Env (
-  Env (..),
+    Env (..),
 ) where
 
 import Data.Pool (Pool)
