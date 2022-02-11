@@ -22,11 +22,14 @@ import Servant.Multipart (Tmp, defaultMultipartOptions, generalOptions)
 import Servant.Server.Experimental.Auth (AuthHandler)
 import Servant.Server.Generic (genericServerT)
 import System.Directory (createDirectoryIfMissing)
+import Network.HTTP.Client qualified as HttpClient
+import Servant.Client (mkClientEnv, parseBaseUrl)
 
 import Api (Routes, marketplaceApi)
 import Api.Auth (authHandler)
 import Api.Handler (handlers)
-import App (App (..), Env (..))
+import App (App (..))
+import Env (Env (..))
 import Options (Options (..))
 import Options qualified
 import Schema (migrateAll)
@@ -62,6 +65,10 @@ main = do
 
     createDirectoryIfMissing False imageFolder
 
+    ipfsNodeUrl <- parseBaseUrl ipfsNodeAddress
+    manager <- HttpClient.newManager HttpClient.defaultManagerSettings
+    let clientEnv = mkClientEnv manager ipfsNodeUrl
+
     runNoLoggingT $
         withPostgresqlPool connStr 10 $ \pool ->
             liftIO $
@@ -70,7 +77,8 @@ main = do
                         migrateAll
                     -- addMigration True "CREATE INDEX CONCURRENTLY IF NOT EXISTS image_created_at_index ON image (created_at)"
                     -- addMigration True "CREATE INDEX CONCURRENTLY IF NOT EXISTS artist_created_at_index ON artist (created_at)"
-                    let env = Env pool imageFolderText
+                    let env = Env pool imageFolderText clientEnv
+
                     liftIO $
                         withStdoutLogger $ \logger -> do
                             let warpSettings = W.setPort serverPort $ W.setLogger logger W.defaultSettings

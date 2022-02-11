@@ -14,7 +14,7 @@ import Data.Time (UTCTime, getCurrentTime)
 import Database.Esqueleto.Experimental
 import Database.Esqueleto.Pagination qualified as DbPagination
 import Database.Persist.Postgresql qualified as P
-import Servant (Headers, Proxy (..), addHeader, err422)
+import Servant (Headers, Proxy (..), addHeader, err422, err500)
 import Servant.API.Generic (ToServant)
 import Servant.Multipart (MultipartData, Tmp, fdFileName, fdPayload, files, inputs, lookupInput)
 import Servant.Pagination (Range (..), RangeOrder (..), Ranges, extractRange, getDefaultRange, returnRange)
@@ -22,10 +22,12 @@ import Servant.Server.Generic (AsServerT, genericServerT)
 
 import Api (AdminApi (..), ArtistApi (..), ArtistPaginationHeaders, ImageApi (..), ImagePaginationHeaders, PurchaseApi (..), Routes (..))
 import Api.Error (JsonError (..), throwJsonError)
-import App (App, Env (..))
+import App (App)
+import Env (Env (..))
 
 import Api.Types
 import Schema
+import Ipfs qualified
 
 handlers :: Routes (AsServerT App)
 handlers = Routes{..}
@@ -69,7 +71,7 @@ handlers = Routes{..}
         Env{..} <- ask
 
         imageAlreadyExists <- liftIO $
-            runDB dbConnPool $ do
+            runDB envDbConnPool $ do
                 selectOne $ do
                     image' <- from $ table @Image
                     where_ (image' ^. ImageSha256hash ==. val imgHashHex)
@@ -77,13 +79,15 @@ handlers = Routes{..}
         when (isJust imageAlreadyExists) $
             throwJsonError err422 (JsonError "Image already exists")
 
-        let imgPath = imageStoreFolder <> "/" <> imgHashHex <> "_" <> imgFilename
+        let imgPath = envImageStoreFolder <> "/" <> imgHashHex <> "_" <> imgFilename
         liftIO $ BS.writeFile (Text.unpack imgPath) imgData
+
+        Ipfs.CID ipfsHash <- Ipfs.ipfsAdd imgData >>= maybe (throwJsonError err500 (JsonError "Error adding image to IPFS")) pure
 
         currentTime <- liftIO getCurrentTime
         liftIO $
-            runDB dbConnPool $ do
-                a <- insert $ Image imageTitle imageDesc imgPath imgHashHex currentTime
+            runDB envDbConnPool $ do
+                a <- insert $ Image imageTitle imageDesc imgPath imgHashHex ipfsHash currentTime
                 liftIO $ print a
         pure $ UploadImageResponse imgHashHex
 
@@ -99,7 +103,7 @@ handlers = Routes{..}
 
         (imageCountValue :: [Single Int]) <-
             liftIO $
-                runDB dbConnPool $
+                runDB envDbConnPool $
                     rawSql "SELECT reltuples FROM pg_class WHERE relname = 'image'" []
         let (imageCount :: Int) = unSingle $ head imageCountValue
 
@@ -111,15 +115,15 @@ handlers = Routes{..}
 
         mpage <-
             liftIO $
-                runDB dbConnPool $
+                runDB envDbConnPool $
                     DbPagination.getPage query ImageCreatedAt pageSize paginationOrder desiredRange
 
         let dbImages = maybe [] DbPagination.pageRecords mpage
 
         let toApiImage dbImg =
-                let Image title description path hash createdAt = entityVal dbImg
+                let Image title description path hash ipfsHash createdAt = entityVal dbImg
                     imgId = fromSqlKey $ entityKey dbImg
-                 in ListImage imgId title description path hash createdAt
+                 in ListImage imgId title description path hash ipfsHash createdAt
 
         let images = map toApiImage dbImages
         addHeader imageCount <$> returnRange range images
@@ -132,7 +136,7 @@ handlers = Routes{..}
     lookupArtist pubKeyHash = do
         Env{..} <- ask
         martist <- liftIO $
-            runDB dbConnPool $ do
+            runDB envDbConnPool $ do
                 selectOne $ do
                     artist' <- from $ table @Artist
                     where_ (artist' ^. ArtistPubKeyHash ==. val pubKeyHash)
@@ -157,7 +161,7 @@ handlers = Routes{..}
 
         (artistCountValue :: [Single Int]) <-
             liftIO $
-                runDB dbConnPool $
+                runDB envDbConnPool $
                     rawSql "SELECT reltuples FROM pg_class WHERE relname = 'artist'" []
         let (artistCount :: Int) = unSingle $ head artistCountValue
 
@@ -169,7 +173,7 @@ handlers = Routes{..}
 
         mpage <-
             liftIO $
-                runDB dbConnPool $
+                runDB envDbConnPool $
                     DbPagination.getPage query ArtistCreatedAt pageSize paginationOrder desiredRange
 
         let dbArtists = maybe [] DbPagination.pageRecords mpage
@@ -191,7 +195,7 @@ handlers = Routes{..}
         Env{..} <- ask
 
         dbPurchases <- liftIO $
-            runDB dbConnPool $ do
+            runDB envDbConnPool $ do
                 select $ do
                     purchase' <- from $ table @Purchase
                     where_ (purchase' ^. PurchaseImageHash ==. val imageHash)
@@ -214,7 +218,7 @@ handlers = Routes{..}
         Env{..} <- ask
 
         imageExists <- liftIO $
-            runDB dbConnPool $ do
+            runDB envDbConnPool $ do
                 selectOne $ do
                     image' <- from $ table @Image
                     where_ (image' ^. ImageSha256hash ==. val imageHash)
@@ -223,7 +227,7 @@ handlers = Routes{..}
             throwJsonError err422 (JsonError "Image does not exists")
 
         liftIO $
-            runDB dbConnPool $ do
+            runDB envDbConnPool $ do
                 numDeleted <- deleteCount $ do
                     images <- from $ table @Image
                     where_ (images ^. ImageSha256hash ==. val imageHash)
@@ -235,7 +239,7 @@ handlers = Routes{..}
         Env{..} <- ask
 
         artistExists <- liftIO $
-            runDB dbConnPool $ do
+            runDB envDbConnPool $ do
                 selectOne $ do
                     artist' <- from $ table @Artist
                     where_
@@ -248,7 +252,7 @@ handlers = Routes{..}
         currentTime <- liftIO getCurrentTime
 
         liftIO $
-            runDB dbConnPool $ do
+            runDB envDbConnPool $ do
                 a <- insert $ Artist name pubKeyHash currentTime
                 liftIO $ print a
 
@@ -259,7 +263,7 @@ handlers = Routes{..}
         Env{..} <- ask
 
         artistExists <- liftIO $
-            runDB dbConnPool $ do
+            runDB envDbConnPool $ do
                 selectOne $ do
                     artist' <- from $ table @Artist
                     where_ (artist' ^. ArtistPubKeyHash ==. val pubKeyHash)
@@ -268,7 +272,7 @@ handlers = Routes{..}
             throwJsonError err422 (JsonError "Artist does not exists")
 
         liftIO $
-            runDB dbConnPool $ do
+            runDB envDbConnPool $ do
                 numDeleted <- deleteCount $ do
                     artists <- from $ table @Artist
                     where_ (artists ^. ArtistPubKeyHash ==. val pubKeyHash)
@@ -282,7 +286,7 @@ handlers = Routes{..}
         -- TODO: get from a request?
         currentTime <- liftIO getCurrentTime
         liftIO $
-            runDB dbConnPool $ do
+            runDB envDbConnPool $ do
                 p <- insert $ Purchase imageHash authorPkh ownerPkh price wasAuctioned currentTime
                 liftIO $ print p
 
