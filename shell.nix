@@ -28,7 +28,7 @@ let
       , lib, monad-logger, mtl, optparse-applicative, persistent
       , persistent-pagination, persistent-postgresql, resource-pool
       , servant, servant-multipart, servant-pagination, servant-server
-      , text, time, wai, wai-extra, wai-logger, warp, ipfs, servant-client, ipfs-api
+      , text, time, wai, wai-extra, wai-logger, warp, servant-client, ipfs-api
       }:
       mkDerivation {
         pname = "nft-marketplace-server";
@@ -41,7 +41,7 @@ let
           filepath http-types monad-logger mtl optparse-applicative
           persistent persistent-pagination persistent-postgresql
           resource-pool servant servant-multipart servant-pagination
-          servant-server text time wai wai-extra wai-logger warp ipfs servant-client
+          servant-server text time wai wai-extra wai-logger warp servant-client
           ipfs-api
         ];
         license = "unknown";
