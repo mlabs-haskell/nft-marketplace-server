@@ -18,8 +18,10 @@ Image
     description Text
     path Text
     sha256hash Text
+    ipfsHash Text
     createdAt UTCTime default=now()
     UniqueSha256hash sha256hash
+    UniqueIpfsHash ipfsHash
     deriving Show
 Artist
     name Text
