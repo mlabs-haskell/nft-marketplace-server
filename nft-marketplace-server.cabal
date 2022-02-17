@@ -46,8 +46,7 @@ executable nft-marketplace-server
   import:         common-configs
   ghc-options:
     -Wall -Wcompat -Wincomplete-uni-patterns -Wredundant-constraints
-    -Wmissing-export-lists -Wmissing-deriving-strategies -Werror
-    -O2
+    -Wmissing-export-lists -Wmissing-deriving-strategies -Werror -O2
 
   main-is:        Main.hs
   other-modules:
@@ -57,12 +56,14 @@ executable nft-marketplace-server
     Api.Handler
     Api.Types
     App
+    Env
+    Ipfs
     Options
     Schema
 
   hs-source-dirs: src
   build-depends:
-      aeson
+    , aeson
     , base
     , base16
     , bytestring
@@ -72,7 +73,9 @@ executable nft-marketplace-server
     , esqueleto
     , exceptions
     , filepath
+    , http-client
     , http-types
+    , ipfs-api
     , monad-logger
     , mtl
     , optparse-applicative
@@ -81,11 +84,13 @@ executable nft-marketplace-server
     , persistent-postgresql
     , resource-pool
     , servant
+    , servant-client
     , servant-multipart
     , servant-pagination
     , servant-server
     , text
     , time
+    , unordered-containers
     , wai
     , wai-cors
     , wai-extra

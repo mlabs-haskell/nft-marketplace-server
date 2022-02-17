@@ -9,7 +9,7 @@ import Servant.Server.Experimental.Auth (AuthHandler, mkAuthHandler)
 import Database.Esqueleto.Experimental
 import Database.Persist.Postgresql qualified as P
 
-import App (Env (..))
+import Env (Env (..))
 import Schema
 
 authHandler :: Env -> AuthHandler Request ()
@@ -22,7 +22,7 @@ authHandler env = mkAuthHandler handler
         authHeader <- maybe throwUnauthorized pure . lookup "Authorization" $ requestHeaders req
         authHeaderText <- either (const throwUnauthorized) pure $ decodeUtf8' authHeader
         adminToken <- liftIO $
-            flip P.runSqlPersistMPool dbConnPool $ do
+            flip P.runSqlPersistMPool envDbConnPool $ do
                 selectOne $ do
                     token <- from $ table @AdminToken
                     where_ (token ^. AdminTokenToken ==. val authHeaderText)

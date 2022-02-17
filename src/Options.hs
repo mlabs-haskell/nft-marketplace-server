@@ -6,6 +6,7 @@ data Options = Options
     { serverPort :: Int
     , imageFolder :: String
     , dbConnectionString :: String
+    , ipfsNodeAddress :: String
     }
 
 options :: Parser Options
@@ -30,6 +31,11 @@ options =
         <*> strOption
             ( long "db-connection"
                 <> help "LibPQ connection string"
+                <> metavar "STR"
+            )
+        <*> strOption
+            ( long "ipfs-node"
+                <> help "IPFS node address"
                 <> metavar "STR"
             )
 

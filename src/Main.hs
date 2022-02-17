@@ -12,6 +12,8 @@ import Data.Text qualified as Text
 import Database.Persist.Postgresql (runMigration, runSqlPersistMPool, withPostgresqlPool)
 
 -- import Database.Persist.Sql.Migration (addMigration)
+
+import Network.HTTP.Client qualified as HttpClient
 import Network.Wai (Request)
 import Network.Wai.Handler.Warp qualified as W
 import Network.Wai.Logger (withStdoutLogger)
@@ -19,6 +21,7 @@ import Network.Wai.Middleware.Cors (simpleCors)
 import Network.Wai.Parse (defaultParseRequestBodyOptions, setMaxRequestFileSize)
 import Servant (Application, Context (..), Handler (..), Proxy (..), ServerT, hoistServerWithContext, serveWithContext)
 import Servant.API.Generic (ToServantApi)
+import Servant.Client (mkClientEnv, parseBaseUrl)
 import Servant.Multipart (Tmp, defaultMultipartOptions, generalOptions)
 import Servant.Server.Experimental.Auth (AuthHandler)
 import Servant.Server.Generic (genericServerT)
@@ -27,7 +30,8 @@ import System.Directory (createDirectoryIfMissing)
 import Api (Routes, marketplaceApi)
 import Api.Auth (authHandler)
 import Api.Handler (handlers)
-import App (App (..), Env (..))
+import App (App (..))
+import Env (Env (..))
 import Options (Options (..))
 import Options qualified
 import Schema (migrateAll)
@@ -63,6 +67,10 @@ main = do
 
     createDirectoryIfMissing False imageFolder
 
+    ipfsNodeUrl <- parseBaseUrl ipfsNodeAddress
+    manager <- HttpClient.newManager HttpClient.defaultManagerSettings
+    let clientEnv = mkClientEnv manager ipfsNodeUrl
+
     runNoLoggingT $
         withPostgresqlPool connStr 10 $ \pool ->
             liftIO $
@@ -71,7 +79,8 @@ main = do
                         migrateAll
                     -- addMigration True "CREATE INDEX CONCURRENTLY IF NOT EXISTS image_created_at_index ON image (created_at)"
                     -- addMigration True "CREATE INDEX CONCURRENTLY IF NOT EXISTS artist_created_at_index ON artist (created_at)"
-                    let env = Env pool imageFolderText
+                    let env = Env pool imageFolderText clientEnv
+
                     liftIO $
                         withStdoutLogger $ \logger -> do
                             let warpSettings = W.setPort serverPort $ W.setLogger logger W.defaultSettings

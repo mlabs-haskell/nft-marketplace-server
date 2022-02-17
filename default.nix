@@ -1,10 +1,10 @@
 { mkDerivation, aeson, base, base16, bytestring, conduit
 , cryptohash-sha256, directory, esqueleto, exceptions, filepath
-, http-types, lib, monad-logger, mtl, optparse-applicative
-, persistent, persistent-pagination, persistent-postgresql
-, resource-pool, servant, servant-multipart, servant-pagination
-, servant-server, text, time, wai, wai-cors, wai-extra, wai-logger
-, warp
+, http-client, http-types, ipfs-api, lib, monad-logger, mtl
+, optparse-applicative, persistent, persistent-pagination
+, persistent-postgresql, resource-pool, servant, servant-client
+, servant-multipart, servant-pagination, servant-server, text, time
+, unordered-containers, wai, wai-extra, wai-logger, warp, wai-cors
 }:
 mkDerivation {
   pname = "nft-marketplace-server";
@@ -14,11 +14,11 @@ mkDerivation {
   isExecutable = true;
   executableHaskellDepends = [
     aeson base base16 bytestring conduit cryptohash-sha256 directory
-    esqueleto exceptions filepath http-types monad-logger mtl
-    optparse-applicative persistent persistent-pagination
-    persistent-postgresql resource-pool servant servant-multipart
-    servant-pagination servant-server text time wai wai-cors wai-extra
-    wai-logger warp
+    esqueleto exceptions filepath http-client http-types ipfs-api
+    monad-logger mtl optparse-applicative persistent
+    persistent-pagination persistent-postgresql resource-pool servant
+    servant-client servant-multipart servant-pagination servant-server
+    text time unordered-containers wai wai-extra wai-logger warp wai-cors
   ];
   license = "unknown";
   hydraPlatforms = lib.platforms.none;
