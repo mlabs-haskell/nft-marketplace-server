@@ -84,4 +84,4 @@ main = do
                     liftIO $
                         withStdoutLogger $ \logger -> do
                             let warpSettings = W.setPort serverPort $ W.setLogger logger W.defaultSettings
-                            W.runSettings warpSettings $ simpleCors $ (appService env)
+                            W.runSettings warpSettings $ simpleCors (appService env)
