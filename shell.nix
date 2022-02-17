@@ -28,7 +28,7 @@ let
       , lib, monad-logger, mtl, optparse-applicative, persistent
       , persistent-pagination, persistent-postgresql, resource-pool
       , servant, servant-multipart, servant-pagination, servant-server
-      , text, time, wai, wai-extra, wai-logger, warp, servant-client, ipfs-api
+      , text, time, wai, wai-extra, wai-logger, warp, servant-client, ipfs-api, wai-cors
       }:
       mkDerivation {
         pname = "nft-marketplace-server";
@@ -42,7 +42,7 @@ let
           persistent persistent-pagination persistent-postgresql
           resource-pool servant servant-multipart servant-pagination
           servant-server text time wai wai-extra wai-logger warp servant-client
-          ipfs-api
+          ipfs-api wai-cors
         ];
         license = "unknown";
         hydraPlatforms = lib.platforms.none;

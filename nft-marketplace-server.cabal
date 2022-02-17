@@ -92,6 +92,7 @@ executable nft-marketplace-server
     , time
     , unordered-containers
     , wai
+    , wai-cors
     , wai-extra
     , wai-logger
     , warp

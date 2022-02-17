@@ -4,7 +4,7 @@
 , optparse-applicative, persistent, persistent-pagination
 , persistent-postgresql, resource-pool, servant, servant-client
 , servant-multipart, servant-pagination, servant-server, text, time
-, unordered-containers, wai, wai-extra, wai-logger, warp
+, unordered-containers, wai, wai-extra, wai-logger, warp, wai-cors
 }:
 mkDerivation {
   pname = "nft-marketplace-server";
@@ -18,7 +18,7 @@ mkDerivation {
     monad-logger mtl optparse-applicative persistent
     persistent-pagination persistent-postgresql resource-pool servant
     servant-client servant-multipart servant-pagination servant-server
-    text time unordered-containers wai wai-extra wai-logger warp
+    text time unordered-containers wai wai-extra wai-logger warp wai-cors
   ];
   license = "unknown";
   hydraPlatforms = lib.platforms.none;
