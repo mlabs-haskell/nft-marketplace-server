@@ -87,6 +87,7 @@ executable nft-marketplace-server
     , text
     , time
     , wai
+    , wai-cors
     , wai-extra
     , wai-logger
     , warp

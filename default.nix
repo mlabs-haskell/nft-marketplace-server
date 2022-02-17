@@ -3,7 +3,8 @@
 , http-types, lib, monad-logger, mtl, optparse-applicative
 , persistent, persistent-pagination, persistent-postgresql
 , resource-pool, servant, servant-multipart, servant-pagination
-, servant-server, text, time, wai, wai-extra, wai-logger, warp
+, servant-server, text, time, wai, wai-cors, wai-extra, wai-logger
+, warp
 }:
 mkDerivation {
   pname = "nft-marketplace-server";
@@ -16,7 +17,7 @@ mkDerivation {
     esqueleto exceptions filepath http-types monad-logger mtl
     optparse-applicative persistent persistent-pagination
     persistent-postgresql resource-pool servant servant-multipart
-    servant-pagination servant-server text time wai wai-extra
+    servant-pagination servant-server text time wai wai-cors wai-extra
     wai-logger warp
   ];
   license = "unknown";

@@ -15,6 +15,7 @@ import Database.Persist.Postgresql (runMigration, runSqlPersistMPool, withPostgr
 import Network.Wai (Request)
 import Network.Wai.Handler.Warp qualified as W
 import Network.Wai.Logger (withStdoutLogger)
+import Network.Wai.Middleware.Cors (simpleCors)
 import Network.Wai.Parse (defaultParseRequestBodyOptions, setMaxRequestFileSize)
 import Servant (Application, Context (..), Handler (..), Proxy (..), ServerT, hoistServerWithContext, serveWithContext)
 import Servant.API.Generic (ToServantApi)
@@ -74,4 +75,4 @@ main = do
                     liftIO $
                         withStdoutLogger $ \logger -> do
                             let warpSettings = W.setPort serverPort $ W.setLogger logger W.defaultSettings
-                            W.runSettings warpSettings (appService env)
+                            W.runSettings warpSettings $ simpleCors $ (appService env)
