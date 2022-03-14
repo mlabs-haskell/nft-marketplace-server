@@ -1,2 +1,5 @@
 dist-newstyle
 deploy/services/*
+
+# nix 
+result
