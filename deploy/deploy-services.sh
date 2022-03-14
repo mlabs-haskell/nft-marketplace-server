@@ -9,18 +9,17 @@
 
 set -euo pipefail
 
-mkdir -p services
+# mkdir -p services
 
 export COMPOSE_PROJECT_NAME=test
 
-# remove `--env-file` to use this exports
-# export IPFS_DATA_VOL=./ipfs/data
-# export PG_USER=seadebug
-# export PG_PASS=seadebugpass
-# export PG_DATA_VOL=./pg/data
+# Required environment variables (with examples)
+# export SERVICES_VOL=/home/ubuntu/seabug/images
+# export PG_ADMIN_PASS=123456
+# export PG_SBUG_USER=seadebug
+# export PG_SBUG_PASS=654321
 
-docker compose \
+docker-compose \
   -f ./docker-compose.yml \
-  --env-file ./def.env \
   "$@"
 

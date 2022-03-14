@@ -8,7 +8,9 @@ services:
       - IPFS_PROFILE=server
       - IPFS_PATH=/ipfsdata
     volumes:
-      - ${IPFS_DATA_VOL:?err}:/ipfsdata
+      - ${SERVICES_VOL:?err}/ipfs/data:/ipfsdata
+    networks:
+      - seabug
     ports:
       - "4001:4001"
       - "127.0.0.1:8080:8080"
@@ -19,10 +21,18 @@ services:
     container_name: ${COMPOSE_PROJECT_NAME}-seabug-db
     restart: always
     environment:
-      POSTGRES_USER: ${PG_USER:?err}
-      POSTGRES_PASSWORD: ${PG_PASS:?err}
+      POSTGRES_PASSWORD: ${PG_ADMIN_PASS:?err}
       PGDATA: /var/lib/postgresql/data/pgdata
+      PG_SBUG_USER: ${PG_SBUG_USER:?err}
+      PG_SBUG_PASS: ${PG_SBUG_PASS:?err}
     volumes:
-      - ${PG_DATA_VOL:?err}:/var/lib/postgresql/data/pgdata
+      - ${SERVICES_VOL:?err}/pg/data:/var/lib/postgresql/data/pgdata
+      - ${PWD}/pg_init:/docker-entrypoint-initdb.d
+    networks:
+      - seabug
     ports:
       - 5432:5432
+
+networks:
+ seabug:
+  name: ${COMPOSE_PROJECT_NAME}_seabug

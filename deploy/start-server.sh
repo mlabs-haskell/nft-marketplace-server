@@ -4,8 +4,14 @@
 
 set -euo pipefail
 
+# Required environment variables (with examples)
+# export PG_SBUG_USER=seadebug
+# export PG_SBUG_PASS=654321
+
+# E.g.: ./start-server.sh --image-folder /home/ubuntu/seabug/images   
+
 ./nft-marketplace-server \
   -p 8008 \
-  --db-connection "postgresql://seadebug:seadebugpass@localhost:5432/seadebug" \
-  --ipfs-node "localhost:8081" \
-  --image-folder "./images"
+  --db-connection "postgresql://$PG_SBUG_USER:$PG_SBUG_PASS@localhost:5432/$PG_SBUG_USER" \
+  --ipfs-node "localhost:5001"\
+  "$@" # for specifying images directory
