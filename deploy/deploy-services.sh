@@ -14,7 +14,7 @@ set -euo pipefail
 export COMPOSE_PROJECT_NAME=test
 
 # Required environment variables (with examples)
-# export SERVICES_VOL=/home/ubuntu/seabug/images
+# export SERVICES_VOL=/home/ubuntu/seabug/docker_volumes
 # export PG_ADMIN_PASS=123456
 # export PG_SBUG_USER=seadebug
 # export PG_SBUG_PASS=654321
