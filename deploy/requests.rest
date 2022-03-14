@@ -2,7 +2,7 @@ POST http://localhost:8008/admin/create_artist
 content-type: application/json
 Authorization: seadebug_token_1
 
-{"name":"abc", "pubKeyHash": "fff"}
+{"name":"Test Artist 1", "pubKeyHash": "fff"}
 
 ###
 GET http://localhost:8008/artists
