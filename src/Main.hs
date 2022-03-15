@@ -15,11 +15,11 @@ import Control.Monad.Logger (runNoLoggingT)
 import Control.Monad.Reader (runReaderT)
 import Data.ByteString.Char8 qualified as BSC
 import Data.Text qualified as Text
-import Database.Persist.Postgresql
-  ( runMigration,
+import Database.Persist.Postgresql (
+    runMigration,
     runSqlPersistMPool,
     withPostgresqlPool,
-  )
+ )
 import Env (Env (..))
 import Network.HTTP.Client qualified as HttpClient
 import Network.Wai (Request)
@@ -44,10 +44,10 @@ appService env = serveWithContext marketplaceApi ctx appServer
     ctx = authHandler env :. multipartOpts :. EmptyContext
 
     multipartOpts =
-      (defaultMultipartOptions (Proxy :: Proxy Tmp))
-        { -- Disallow files > 2MiB
-          generalOptions = setMaxRequestFileSize (2 * 1024 * 1024) defaultParseRequestBodyOptions
-        }
+        (defaultMultipartOptions (Proxy :: Proxy Tmp))
+            { -- Disallow files > 2MiB
+              generalOptions = setMaxRequestFileSize (2 * 1024 * 1024) defaultParseRequestBodyOptions
+            }
 
     hoistApp :: App a -> Handler a
     hoistApp = Handler . ExceptT . try . flip runReaderT env . unApp
@@ -63,28 +63,28 @@ appService env = serveWithContext marketplaceApi ctx appServer
 
 main :: IO ()
 main = do
-  Options {..} <- Options.parseOptions
-  let imageFolderText = Text.pack imageFolder
-  let connStr = BSC.pack dbConnectionString
+    Options{..} <- Options.parseOptions
+    let imageFolderText = Text.pack imageFolder
+    let connStr = BSC.pack dbConnectionString
 
-  createDirectoryIfMissing False imageFolder
+    createDirectoryIfMissing False imageFolder
 
-  ipfsNodeUrl <- parseBaseUrl ipfsNodeAddress
-  manager <- HttpClient.newManager HttpClient.defaultManagerSettings
-  let clientEnv = mkClientEnv manager ipfsNodeUrl
+    ipfsNodeUrl <- parseBaseUrl ipfsNodeAddress
+    manager <- HttpClient.newManager HttpClient.defaultManagerSettings
+    let clientEnv = mkClientEnv manager ipfsNodeUrl
 
-  runNoLoggingT $
-    withPostgresqlPool connStr 10 $ \pool -> do
-      liftIO $ -- run migrations
-        flip runSqlPersistMPool pool $ do
-          runMigration $ do
-            migrateAll
-      -- addMigration True "CREATE INDEX CONCURRENTLY IF NOT EXISTS image_created_at_index ON image (created_at)"
-      -- addMigration True "CREATE INDEX CONCURRENTLY IF NOT EXISTS artist_created_at_index ON artist (created_at)"
+    runNoLoggingT $
+        withPostgresqlPool connStr 10 $ \pool -> do
+            liftIO $ -- run migrations
+                flip runSqlPersistMPool pool $ do
+                    runMigration $ do
+                        migrateAll
+            -- addMigration True "CREATE INDEX CONCURRENTLY IF NOT EXISTS image_created_at_index ON image (created_at)"
+            -- addMigration True "CREATE INDEX CONCURRENTLY IF NOT EXISTS artist_created_at_index ON artist (created_at)"
 
-      liftIO $ putStrLn $ "Starting server on port " <> show serverPort
-      liftIO $ -- start server
-        withStdoutLogger $ \logger -> do
-          let env = Env pool imageFolderText clientEnv
-              warpSettings = W.setPort serverPort $ W.setLogger logger W.defaultSettings
-          W.runSettings warpSettings $ simpleCors (appService env)
+            liftIO $ putStrLn $ "Starting server on port " <> show serverPort
+            liftIO $ -- start server
+                withStdoutLogger $ \logger -> do
+                    let env = Env pool imageFolderText clientEnv
+                        warpSettings = W.setPort serverPort $ W.setLogger logger W.defaultSettings
+                    W.runSettings warpSettings $ simpleCors (appService env)
