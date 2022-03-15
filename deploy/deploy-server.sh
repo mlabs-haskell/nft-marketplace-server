@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Start NFT-server
+# Helper to start NFT-server
 
 set -euo pipefail
 

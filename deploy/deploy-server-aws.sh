@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# Deploy NFT-server on AWS from repo
+# Deploy NFT-server from repo
+# Requires systemd service to be configured first  (see README.md)
 
 set -euo pipefail
 cd ..
