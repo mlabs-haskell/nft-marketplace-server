@@ -3,3 +3,6 @@ deploy/services/*
 
 # nix 
 result
+
+# IDEs
+.vscode

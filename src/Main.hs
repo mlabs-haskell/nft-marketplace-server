@@ -82,6 +82,7 @@ main = do
       -- addMigration True "CREATE INDEX CONCURRENTLY IF NOT EXISTS image_created_at_index ON image (created_at)"
       -- addMigration True "CREATE INDEX CONCURRENTLY IF NOT EXISTS artist_created_at_index ON artist (created_at)"
 
+      liftIO $ putStrLn $ "Starting server on port " <> show serverPort
       liftIO $ -- start server
         withStdoutLogger $ \logger -> do
           let env = Env pool imageFolderText clientEnv

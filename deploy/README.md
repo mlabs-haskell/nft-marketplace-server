@@ -12,3 +12,7 @@ To start:
 ## Some resources
 
 [Setting up an IPFS Node](https://willschenk.com/articles/2019/setting_up_an_ipfs_node/)
+
+
+## TODO 
+systemctl edit nft-marketplace-server.service
