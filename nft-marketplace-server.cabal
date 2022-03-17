@@ -58,6 +58,7 @@ executable nft-marketplace-server
     App
     Env
     Ipfs
+    NftStorage
     Options
     Schema
 
@@ -74,6 +75,8 @@ executable nft-marketplace-server
     , exceptions
     , filepath
     , http-client
+    , http-client-tls
+    , http-media
     , http-types
     , ipfs-api
     , monad-logger

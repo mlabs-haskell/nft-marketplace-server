@@ -4,28 +4,25 @@ module Ipfs (
 ) where
 
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Reader (ask)
 import Data.Aeson (Value (..))
 import Data.ByteString (ByteString)
 import Data.ByteString.Lazy qualified as BSL
 import Data.Text (Text)
 import Network.IPFS.API (ApiV0Add)
 import Servant (Proxy (..))
-import Servant.Client (client, runClientM)
+import Servant.Client (ClientEnv, client, runClientM)
 
 import Data.HashMap.Strict qualified as HM
 
 import App (App)
-import Env (Env (..))
 
 ipfsAddApi :: Proxy ApiV0Add
 ipfsAddApi = Proxy
 
 newtype CID = CID {unCID :: Text}
 
-ipfsAdd :: ByteString -> App (Maybe CID)
-ipfsAdd fileContents = do
-    Env{..} <- ask
+ipfsAdd :: ClientEnv -> ByteString -> App (Maybe CID)
+ipfsAdd envIpfsClientEnv fileContents = do
     result <- liftIO $ runClientM query envIpfsClientEnv
     case result of
         Left _ -> do

@@ -1,5 +1,6 @@
 module Env (
     Env (..),
+    NftDbEnv (..),
 ) where
 
 import Data.Pool (Pool)
@@ -10,9 +11,11 @@ import Servant.Client (ClientEnv)
 
 type PgConnectionPool = Pool SqlBackend
 
+data NftDbEnv = IpfsNftDbEnv ClientEnv | NftStorageNftDbEnv ClientEnv String
+
 data Env = Env
     { envDbConnPool :: PgConnectionPool
     , envImageStoreFolder :: Text
-    , envIpfsClientEnv :: ClientEnv
+    , envNftDb :: NftDbEnv
     }
     deriving stock (Generic)
