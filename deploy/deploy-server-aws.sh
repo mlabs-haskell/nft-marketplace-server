@@ -8,4 +8,5 @@ cd ..
 . ~/.nix-profile/etc/profile.d/nix.sh
 nix build -f release.nix --extra-experimental-features nix-command
 
+sudo systemctl enable nft-marketplace-server.service
 sudo systemctl restart nft-marketplace-server.service
