@@ -1,0 +1,12 @@
+[Unit]
+Description=nft-marketplace-server
+
+[Service]
+Type=simple
+Restart=always
+User=ubuntu
+WorkingDirectory=/home/ubuntu/seabug/nft-marketplace-server
+ExecStart=/bin/bash -c '/home/ubuntu/seabug/nft-marketplace-server/result/bin/nft-marketplace-server -p 8008 --db-connection \"postgresql://${PG_SBUG_USER}:${PG_SBUG_PASS}@localhost:5432/${PG_SBUG_USER}\" --ipfs-node \"localhost:5001\" --image-folder /home/ubuntu/seabug/images'
+
+[Install]
+WantedBy=multi-user.target
