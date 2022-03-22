@@ -1,18 +1,26 @@
 module Main (main) where
 
+-- import Control.Monad.Logger (runStderrLoggingT)
+
+-- import Database.Persist.Sql.Migration (addMigration)
+
+import Api (Routes, marketplaceApi)
+import Api.Auth (authHandler)
+import Api.Handler (handlers)
+import App (App (..))
 import Control.Monad.Catch (try)
 import Control.Monad.Except (ExceptT (..))
 import Control.Monad.IO.Class (liftIO)
-
--- import Control.Monad.Logger (runStderrLoggingT)
 import Control.Monad.Logger (runNoLoggingT)
 import Control.Monad.Reader (runReaderT)
 import Data.ByteString.Char8 qualified as BSC
 import Data.Text qualified as Text
-import Database.Persist.Postgresql (runMigration, runSqlPersistMPool, withPostgresqlPool)
-
--- import Database.Persist.Sql.Migration (addMigration)
-
+import Database.Persist.Postgresql (
+    runMigration,
+    runSqlPersistMPool,
+    withPostgresqlPool,
+ )
+import Env (Env (..), NftDbEnv (..))
 import Network.HTTP.Client qualified as HttpClient
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Network.Wai (Request)
@@ -20,6 +28,9 @@ import Network.Wai.Handler.Warp qualified as W
 import Network.Wai.Logger (withStdoutLogger)
 import Network.Wai.Middleware.Cors (simpleCors)
 import Network.Wai.Parse (defaultParseRequestBodyOptions, setMaxRequestFileSize)
+import Options (NftDbOptions (..), Options (..))
+import Options qualified
+import Schema (migrateAll)
 import Servant (Application, Context (..), Handler (..), Proxy (..), ServerT, hoistServerWithContext, serveWithContext)
 import Servant.API.Generic (ToServantApi)
 import Servant.Client (mkClientEnv, parseBaseUrl)
@@ -27,15 +38,6 @@ import Servant.Multipart (Tmp, defaultMultipartOptions, generalOptions)
 import Servant.Server.Experimental.Auth (AuthHandler)
 import Servant.Server.Generic (genericServerT)
 import System.Directory (createDirectoryIfMissing)
-
-import Api (Routes, marketplaceApi)
-import Api.Auth (authHandler)
-import Api.Handler (handlers)
-import App (App (..))
-import Env (Env (..), NftDbEnv (..))
-import Options (NftDbOptions (..), Options (..))
-import Options qualified
-import Schema (migrateAll)
 
 appService :: Env -> Application
 appService env = serveWithContext marketplaceApi ctx appServer
@@ -79,16 +81,17 @@ main = do
             pure $ NftStorageNftDbEnv (mkClientEnv manager nftStorageUrl) apiKey
 
     runNoLoggingT $
-        withPostgresqlPool connStr 10 $ \pool ->
-            liftIO $
+        withPostgresqlPool connStr 10 $ \pool -> do
+            liftIO $ -- run migrations
                 flip runSqlPersistMPool pool $ do
                     runMigration $ do
                         migrateAll
-                    -- addMigration True "CREATE INDEX CONCURRENTLY IF NOT EXISTS image_created_at_index ON image (created_at)"
-                    -- addMigration True "CREATE INDEX CONCURRENTLY IF NOT EXISTS artist_created_at_index ON artist (created_at)"
-                    let env = Env pool imageFolderText clientEnv
+            -- addMigration True "CREATE INDEX CONCURRENTLY IF NOT EXISTS image_created_at_index ON image (created_at)"
+            -- addMigration True "CREATE INDEX CONCURRENTLY IF NOT EXISTS artist_created_at_index ON artist (created_at)"
 
-                    liftIO $
-                        withStdoutLogger $ \logger -> do
-                            let warpSettings = W.setPort serverPort $ W.setLogger logger W.defaultSettings
-                            W.runSettings warpSettings $ simpleCors (appService env)
+            liftIO $ putStrLn $ "Starting server on port " <> show serverPort
+            liftIO $ -- start server
+                withStdoutLogger $ \logger -> do
+                    let env = Env pool imageFolderText clientEnv
+                        warpSettings = W.setPort serverPort $ W.setLogger logger W.defaultSettings
+                    W.runSettings warpSettings $ simpleCors (appService env)
