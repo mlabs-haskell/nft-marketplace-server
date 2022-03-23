@@ -18,3 +18,4 @@ nix build -f release.nix --extra-experimental-features nix-command
   --db-connection "postgresql://$PG_SBUG_USER:$PG_SBUG_PASS@localhost:5432/$PG_SBUG_USER" \
   --ipfs-node "localhost:5001"\
   "$@" # for specifying images directory
+  
