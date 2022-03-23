@@ -1,4 +1,13 @@
-module Api (marketplaceApi, Routes (..), ImageApi (..), PurchaseApi (..), AdminApi (..), ArtistApi (..), ImagePaginationHeaders, ArtistPaginationHeaders) where
+module Api (
+    marketplaceApi,
+    Routes (..),
+    ImageApi (..),
+    PurchaseApi (..),
+    AdminApi (..),
+    ArtistApi (..),
+    ImagePaginationHeaders,
+    ArtistPaginationHeaders,
+) where
 
 import Data.Text (Text)
 import Servant (
@@ -10,6 +19,7 @@ import Servant (
     Header,
     Headers,
     JSON,
+    PlainText,
     Post,
     Proxy (..),
     ReqBody,
@@ -101,6 +111,7 @@ data Routes route = Routes
     , artist :: route :- "artists" :> ToServantApi ArtistApi
     , purchase :: route :- "purchases" :> ToServantApi PurchaseApi
     , admin :: route :- "admin" :> AuthProtect "header-auth" :> ToServantApi AdminApi
+    , healthz :: route :- "healthz" :> Get '[PlainText] Text
     }
     deriving stock (Generic)
 
