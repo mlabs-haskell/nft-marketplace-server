@@ -20,7 +20,15 @@ import Servant.Multipart (MultipartData, Tmp, fdFileName, fdPayload, files, inpu
 import Servant.Pagination (Range (..), RangeOrder (..), Ranges, extractRange, getDefaultRange, returnRange)
 import Servant.Server.Generic (AsServerT, genericServerT)
 
-import Api (AdminApi (..), ArtistApi (..), ArtistPaginationHeaders, ImageApi (..), ImagePaginationHeaders, PurchaseApi (..), Routes (..))
+import Api (
+    AdminApi (..),
+    ArtistApi (..),
+    ArtistPaginationHeaders,
+    ImageApi (..),
+    ImagePaginationHeaders,
+    PurchaseApi (..),
+    Routes (..),
+ )
 import Api.Error (JsonError (..), throwJsonError)
 import App (App)
 import Env (Env (..), NftDbEnv (..))
@@ -296,3 +304,6 @@ handlers = Routes{..}
                 liftIO $ print p
 
         pure $ CreatePurchaseResponse imageHash authorPkh ownerPkh price wasAuctioned currentTime
+
+    -- health check
+    healthz = return "OK"

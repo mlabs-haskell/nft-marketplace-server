@@ -1,24 +1,8 @@
 version: '3'
 services:
-  ipfs:
-    image: ipfs/go-ipfs:latest
-    container_name: ${COMPOSE_PROJECT_NAME}-seabug-ipfs
-    restart: always
-    environment:
-      - IPFS_PROFILE=server
-      - IPFS_PATH=/ipfsdata
-    volumes:
-      - ${SERVICES_VOL:?err}/ipfs/data:/ipfsdata
-    networks:
-      - seabug
-    ports:
-      - "4001:4001"
-      - "127.0.0.1:8080:8080"
-      - "127.0.0.1:8081:8081"
-      - "127.0.0.1:5001:5001"
   postgres:
     image: postgres:14
-    container_name: ${COMPOSE_PROJECT_NAME}-seabug-db
+    container_name: ${COMPOSE_PROJECT_NAME:-default}-seabug-db
     restart: always
     environment:
       POSTGRES_PASSWORD: ${PG_ADMIN_PASS:?err}
@@ -35,4 +19,5 @@ services:
 
 networks:
  seabug:
-  name: ${COMPOSE_PROJECT_NAME}_seabug
+  name: ${COMPOSE_PROJECT_NAME:-default}_seabug
+  

@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # Start infrastructure required by NFT-server.
-# Starts local IPFS node as well unlike current AWS deployment variant.
+# Used for deployment on AWS instace
 
 # Usage examples: 
-# - Start and attach co containers: ./deploy-services.sh up
-# - Start in detached mode: ./deploy-services.sh up -d
-# - Tear down: ./deploy-services.sh down
+# - Start and attach co containers: ./deploy-services-aws.sh up
+# - Start in detached mode: ./deploy-services-aws.sh up -d
+# - Tear down: ./deploy-services-aws.sh down
 
 set -euo pipefail
 
@@ -22,5 +22,4 @@ export COMPOSE_PROJECT_NAME=test
 
 docker-compose \
   -f ./docker-compose.yml \
-  -f ./docker-compose-ipfs.yml \
   "$@"
