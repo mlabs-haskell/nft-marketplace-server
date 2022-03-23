@@ -1,4 +1,8 @@
 # nft-marketplace-server
+## Manually create indexes after running migrations
+1. `CREATE INDEX CONCURRENTLY IF NOT EXISTS image_created_at_index ON image (created_at);`
+2. `CREATE INDEX CONCURRENTLY IF NOT EXISTS artist_created_at_index ON artist (created_at);`
+
 ## Images
 ### `GET /images` 
 Response with headers:
