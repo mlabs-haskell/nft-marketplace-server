@@ -23,10 +23,11 @@ import Servant.Server.Generic (AsServerT, genericServerT)
 import Api (AdminApi (..), ArtistApi (..), ArtistPaginationHeaders, ImageApi (..), ImagePaginationHeaders, PurchaseApi (..), Routes (..))
 import Api.Error (JsonError (..), throwJsonError)
 import App (App)
-import Env (Env (..))
+import Env (Env (..), NftDbEnv (..))
 
 import Api.Types
 import Ipfs qualified
+import NftStorage qualified
 import Schema
 
 handlers :: Routes (AsServerT App)
@@ -82,7 +83,11 @@ handlers = Routes{..}
         let imgPath = envImageStoreFolder <> "/" <> imgHashHex <> "_" <> imgFilename
         liftIO $ BS.writeFile (Text.unpack imgPath) imgData
 
-        Ipfs.CID ipfsHash <- Ipfs.ipfsAdd imgData >>= maybe (throwJsonError err500 (JsonError "Error adding image to IPFS")) pure
+        let saveNftInDb = case envNftDb of
+                IpfsNftDbEnv env' -> Ipfs.ipfsAdd env'
+                NftStorageNftDbEnv env' key -> NftStorage.nftStorageAdd env' key
+
+        Ipfs.CID ipfsHash <- saveNftInDb imgData >>= maybe (throwJsonError err500 (JsonError "Error adding image to DB")) pure
 
         currentTime <- liftIO getCurrentTime
         liftIO $

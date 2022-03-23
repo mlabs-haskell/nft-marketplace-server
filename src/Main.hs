@@ -20,14 +20,15 @@ import Database.Persist.Postgresql (
     runSqlPersistMPool,
     withPostgresqlPool,
  )
-import Env (Env (..))
+import Env (Env (..), NftDbEnv (..))
 import Network.HTTP.Client qualified as HttpClient
+import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Network.Wai (Request)
 import Network.Wai.Handler.Warp qualified as W
 import Network.Wai.Logger (withStdoutLogger)
 import Network.Wai.Middleware.Cors (simpleCors)
 import Network.Wai.Parse (defaultParseRequestBodyOptions, setMaxRequestFileSize)
-import Options (Options (..))
+import Options (NftDbOptions (..), Options (..))
 import Options qualified
 import Schema (migrateAll)
 import Servant (Application, Context (..), Handler (..), Proxy (..), ServerT, hoistServerWithContext, serveWithContext)
@@ -69,9 +70,15 @@ main = do
 
     createDirectoryIfMissing False imageFolder
 
-    ipfsNodeUrl <- parseBaseUrl ipfsNodeAddress
-    manager <- HttpClient.newManager HttpClient.defaultManagerSettings
-    let clientEnv = mkClientEnv manager ipfsNodeUrl
+    clientEnv <- case nftDb of
+        NftDbIpfsAddress ipfsNodeAddress -> do
+            manager <- HttpClient.newManager HttpClient.defaultManagerSettings
+            ipfsNodeUrl <- parseBaseUrl ipfsNodeAddress
+            pure $ IpfsNftDbEnv $ mkClientEnv manager ipfsNodeUrl
+        NftDbNftStorageKey apiKey -> do
+            manager <- HttpClient.newManager tlsManagerSettings
+            nftStorageUrl <- parseBaseUrl "https://api.nft.storage"
+            pure $ NftStorageNftDbEnv (mkClientEnv manager nftStorageUrl) apiKey
 
     runNoLoggingT $
         withPostgresqlPool connStr 10 $ \pool -> do
