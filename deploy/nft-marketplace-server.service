@@ -1,9 +1,13 @@
 [Unit]
 Description=nft-marketplace-server
+# Attempt to restart service forever
+StartLimitIntervalSec=0
 
 [Service]
 Type=simple
 Restart=always
+# Try to restart service each 10 seconds forever with StartLimitIntervalSec=0 
+RestartSec=10s
 User=ubuntu
 WorkingDirectory=/home/ubuntu/seabug/nft-marketplace-server
 ExecStart=/bin/bash -c '/home/ubuntu/seabug/nft-marketplace-server/result/bin/nft-marketplace-server -p 8008 --db-connection \"postgresql://${PG_SBUG_USER}:${PG_SBUG_PASS}@localhost:5432/${PG_SBUG_USER}\" --nft-storage-key \"${NFT_STORAGE_KEY}\" --image-folder /home/ubuntu/seabug/images'
