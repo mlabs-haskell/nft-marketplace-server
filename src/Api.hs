@@ -46,6 +46,7 @@ data ImageApi route = ImageApi
         route
             :- Summary "Create a new image returning its id."
             :> MultipartForm Tmp (MultipartData Tmp)
+            :> AuthProtect "header-auth"
             :> Post '[JSON] UploadImageResponse
     , listImages ::
         route
