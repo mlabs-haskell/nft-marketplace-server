@@ -47,8 +47,8 @@ handlers = Routes{..}
 
     runDB = flip P.runSqlPersistMPool
 
-    uploadImage :: MultipartData Tmp -> () -> App UploadImageResponse
-    uploadImage multipartData _ = do
+    uploadImage :: MultipartData Tmp -> App UploadImageResponse
+    uploadImage multipartData = do
         when (null $ files multipartData) $
             throwJsonError err422 (JsonError "No files uploaded")
         when (null $ inputs multipartData) $

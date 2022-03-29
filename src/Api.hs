@@ -41,14 +41,8 @@ type ArtistPaginationHeaders =
     Header "Total-Count" Int
         ': PageHeaders '["createdAt"] ListArtist
 
-data ImageApi route = ImageApi
-    { uploadImage ::
-        route
-            :- Summary "Create a new image returning its id."
-            :> MultipartForm Tmp (MultipartData Tmp)
-            :> AuthProtect "header-auth"
-            :> Post '[JSON] UploadImageResponse
-    , listImages ::
+newtype ImageApi route = ImageApi
+    { listImages ::
         route
             :- Summary "Get all images"
             :> Header "Range" (Ranges '["createdAt"] ListImage)
@@ -104,6 +98,12 @@ data AdminApi route = AdminApi
             :> Summary "Create a new purchase"
             :> ReqBody '[JSON] CreatePurchaseRequest
             :> Post '[JSON] CreatePurchaseResponse
+    , uploadImage ::
+        route
+            :- "upload_image"
+            :> Summary "Create a new image returning its id."
+            :> MultipartForm Tmp (MultipartData Tmp)
+            :> Post '[JSON] UploadImageResponse
     }
     deriving stock (Generic)
 
