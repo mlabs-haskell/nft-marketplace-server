@@ -27,12 +27,6 @@ Response with headers:
 * Example with `curl`:
 ```curl -X GET /images -vH 'Range: createdAt 2021-11-23T10%3A45%3A10.31487Z;limit 1;offset 1;order desc```
 
-
-### `POST /images`
-```curl -X POST /images -F "image=@Downloads/1.png" -F "title=My title2" -F "description=image description"```
-* Response
- ```{"sha256hash":"c33554365c53292952de796095bd16cffc25502971b5c17b3299ea0a69c4256f"}```
-
 ## Artists
 ### `GET /artists`
 Response with headers:
@@ -77,3 +71,8 @@ Auth by `Authorization: <token>` header.
 * Request 
 ```{"imageHash":"a", "authorPubKeyHash":"b", "ownerPubKeyHash":"c", "price":"d", "wasAuctioned":true }```
 * Response ```{"wasAuctioned":true,"authorPubKeyHash":"b","createdAt":"2021-11-17T12:34:37.528854171Z","imageHash":"a","price":"d","ownerPubKeyHash":"c"}```
+
+### `POST /admin/upload_image`
+```curl -X POST /images -F "image=@Downloads/1.png" -F "title=My title2" -F "description=image description"```
+* Response
+ ```{"sha256hash":"c33554365c53292952de796095bd16cffc25502971b5c17b3299ea0a69c4256f"}```
