@@ -110,12 +110,13 @@ main = do
                                         <> simpleHeaders
                                 , corsExposedHeaders =
                                     Just
-                                        [ "Total-Count"
-                                        , "Accept-Ranges"
-                                        , "Content-Range"
-                                        , "Next-Range"
-                                        ]
-                                        <> simpleResponseHeaders
+                                        ( [ "Total-Count"
+                                          , "Accept-Ranges"
+                                          , "Content-Range"
+                                          , "Next-Range"
+                                          ]
+                                            <> simpleResponseHeaders
+                                        )
                                 }
                         customCors = cors (const $ Just customCorsPolicy)
                     W.runSettings warpSettings $ customCors (appService env)
