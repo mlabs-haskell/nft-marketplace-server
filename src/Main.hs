@@ -26,7 +26,14 @@ import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Network.Wai (Request)
 import Network.Wai.Handler.Warp qualified as W
 import Network.Wai.Logger (withStdoutLogger)
-import Network.Wai.Middleware.Cors (cors, corsExposedHeaders, corsRequestHeaders, simpleCorsResourcePolicy)
+import Network.Wai.Middleware.Cors (
+    cors,
+    corsExposedHeaders,
+    corsRequestHeaders,
+    simpleCorsResourcePolicy,
+    simpleHeaders,
+    simpleResponseHeaders,
+ )
 import Network.Wai.Parse (defaultParseRequestBodyOptions, setMaxRequestFileSize)
 import Options (NftDbOptions (..), Options (..))
 import Options qualified
@@ -100,6 +107,7 @@ main = do
                                     [ "Authorization"
                                     , "Range"
                                     ]
+                                        <> simpleHeaders
                                 , corsExposedHeaders =
                                     Just
                                         [ "Total-Count"
@@ -107,6 +115,7 @@ main = do
                                         , "Content-Range"
                                         , "Next-Range"
                                         ]
+                                        <> simpleResponseHeaders
                                 }
                         customCors = cors (const $ Just customCorsPolicy)
                     W.runSettings warpSettings $ customCors (appService env)
