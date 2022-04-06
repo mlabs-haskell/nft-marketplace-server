@@ -26,7 +26,14 @@ import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Network.Wai (Request)
 import Network.Wai.Handler.Warp qualified as W
 import Network.Wai.Logger (withStdoutLogger)
-import Network.Wai.Middleware.Cors (simpleCors)
+import Network.Wai.Middleware.Cors (
+    cors,
+    corsExposedHeaders,
+    corsRequestHeaders,
+    simpleCorsResourcePolicy,
+    simpleHeaders,
+    simpleResponseHeaders,
+ )
 import Network.Wai.Parse (defaultParseRequestBodyOptions, setMaxRequestFileSize)
 import Options (NftDbOptions (..), Options (..))
 import Options qualified
@@ -94,4 +101,21 @@ main = do
                 withStdoutLogger $ \logger -> do
                     let env = Env pool imageFolderText clientEnv
                         warpSettings = W.setPort serverPort $ W.setLogger logger W.defaultSettings
-                    W.runSettings warpSettings $ simpleCors (appService env)
+                        customCorsPolicy =
+                            simpleCorsResourcePolicy
+                                { corsRequestHeaders =
+                                    [ "Authorization"
+                                    , "Range"
+                                    ]
+                                        <> simpleHeaders
+                                , corsExposedHeaders =
+                                    Just
+                                        [ "Total-Count"
+                                        , "Accept-Ranges"
+                                        , "Content-Range"
+                                        , "Next-Range"
+                                        ]
+                                        <> simpleResponseHeaders
+                                }
+                        customCors = cors (const $ Just customCorsPolicy)
+                    W.runSettings warpSettings $ customCors (appService env)
