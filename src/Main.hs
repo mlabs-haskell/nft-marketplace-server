@@ -53,8 +53,8 @@ appService env = serveWithContext marketplaceApi ctx appServer
 
     multipartOpts =
         (defaultMultipartOptions (Proxy :: Proxy Tmp))
-            { -- Disallow files > 2MiB
-              generalOptions = setMaxRequestFileSize (2 * 1024 * 1024) defaultParseRequestBodyOptions
+            { -- Disallow files > limit
+              generalOptions = setMaxRequestFileSize (envMaxImgSizeMb env * 1024 * 1024) defaultParseRequestBodyOptions
             }
 
     hoistApp :: App a -> Handler a
@@ -99,7 +99,7 @@ main = do
             liftIO $ putStrLn $ "Starting server on port " <> show serverPort
             liftIO $ -- start server
                 withStdoutLogger $ \logger -> do
-                    let env = Env pool imageFolderText clientEnv
+                    let env = Env pool imageFolderText clientEnv maxImgSize
                         warpSettings = W.setPort serverPort $ W.setLogger logger W.defaultSettings
                         customCorsPolicy =
                             simpleCorsResourcePolicy

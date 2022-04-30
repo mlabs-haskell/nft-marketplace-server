@@ -1,5 +1,6 @@
 module Options (Options (..), NftDbOptions (..), parseOptions) where
 
+import GHC.Int (Int64)
 import Options.Applicative (Parser, auto, execParser, fullDesc, help, helper, info, long, metavar, option, short, showDefault, strOption, value, (<**>), (<|>))
 
 data NftDbOptions = NftDbIpfsAddress String | NftDbNftStorageKey String
@@ -9,6 +10,7 @@ data Options = Options
     , imageFolder :: String
     , dbConnectionString :: String
     , nftDb :: NftDbOptions
+    , maxImgSize :: Int64
     }
 
 nftDbOptions :: Parser NftDbOptions
@@ -41,6 +43,14 @@ options =
                 <> metavar "STR"
             )
         <*> nftDbOptions
+        <*> option
+            auto
+            ( long "max-img-size"
+                <> help "Maximum image size (in MB)"
+                <> showDefault
+                <> value 100
+                <> metavar "INT"
+            )
 
 parseOptions :: IO Options
 parseOptions = execParser (info (options <**> helper) fullDesc)
