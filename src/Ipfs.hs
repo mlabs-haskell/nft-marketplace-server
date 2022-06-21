@@ -21,23 +21,20 @@ ipfsAddApi = Proxy
 
 newtype CID = CID {unCID :: Text}
 
-ipfsAdd :: ClientEnv -> ByteString -> App (Maybe CID)
+ipfsAdd :: ClientEnv -> ByteString -> App (Either String CID)
 ipfsAdd envIpfsClientEnv fileContents = do
     result <- liftIO $ runClientM query envIpfsClientEnv
     case result of
-        Left _ -> do
-            liftIO $ putStrLn "Error making an ipfs client request"
-            pure Nothing
-        Right (Object obj) ->
-            case obj HM.!? ("Hash" :: Text) of
-                Just (String hash) ->
-                    pure . Just $ CID hash
-                _ -> do
-                    liftIO $ putStrLn "Error making an ipfs client request: wrong response format"
-                    pure Nothing
-        Right _ -> do
-            liftIO $ putStrLn "Error making an ipfs client request: wrong response format"
-            pure Nothing
+        Left e -> do
+            let msg = "Error making an ipfs client request: " <> show e
+            liftIO $ putStrLn msg
+            pure $ Left msg
+        Right (Object obj) | Just (String hash) <- obj HM.!? ("Hash" :: Text)
+            -> pure . Right $ CID hash
+        Right json -> do
+          let msg = "Error making an ipfs client request: wrong response format: " <> show json
+          liftIO $ putStrLn msg
+          pure $ Left msg
   where
     ipfsClientAdd = client ipfsAddApi
 
