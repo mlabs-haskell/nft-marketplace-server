@@ -95,9 +95,10 @@ handlers = Routes{..}
                 IpfsNftDbEnv env' -> Ipfs.ipfsAdd env'
                 NftStorageNftDbEnv env' key -> NftStorage.nftStorageAdd env' key
 
-        Ipfs.CID ipfsHash <- saveNftInDb imgData >>= \case
-            Right h -> pure h
-            Left e -> throwJsonError err500 (JsonError $ "Error adding image to DB: " <> Text.pack e)
+        Ipfs.CID ipfsHash <-
+            saveNftInDb imgData >>= \case
+                Right h -> pure h
+                Left e -> throwJsonError err500 (JsonError $ "Error adding image to DB: " <> Text.pack e)
 
         currentTime <- liftIO getCurrentTime
         liftIO $

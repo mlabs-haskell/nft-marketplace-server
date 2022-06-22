@@ -29,12 +29,13 @@ ipfsAdd envIpfsClientEnv fileContents = do
             let msg = "Error making an ipfs client request: " <> show e
             liftIO $ putStrLn msg
             pure $ Left msg
-        Right (Object obj) | Just (String hash) <- obj HM.!? ("Hash" :: Text)
-            -> pure . Right $ CID hash
+        Right (Object obj)
+            | Just (String hash) <- obj HM.!? ("Hash" :: Text) ->
+                pure . Right $ CID hash
         Right json -> do
-          let msg = "Error making an ipfs client request: wrong response format: " <> show json
-          liftIO $ putStrLn msg
-          pure $ Left msg
+            let msg = "Error making an ipfs client request: wrong response format: " <> show json
+            liftIO $ putStrLn msg
+            pure $ Left msg
   where
     ipfsClientAdd = client ipfsAddApi
 
