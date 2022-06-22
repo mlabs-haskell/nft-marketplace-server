@@ -42,7 +42,7 @@ type NftStorageApi =
 nftStorageApi :: Proxy NftStorageApi
 nftStorageApi = Proxy
 
-nftStorageAdd :: ClientEnv -> String -> BS.ByteString -> App (Maybe CID)
+nftStorageAdd :: ClientEnv -> String -> BS.ByteString -> App (Either String CID)
 nftStorageAdd nftStorageClientEnv apiKey fileContents = do
     result <- liftIO $ runClientM query nftStorageClientEnv
     let result' = do
@@ -59,8 +59,8 @@ nftStorageAdd nftStorageClientEnv apiKey fileContents = do
     case result' of
         Left e -> do
             liftIO $ putStrLn e
-            pure Nothing
-        Right v -> pure $ pure $ CID v
+            pure $ Left e
+        Right v -> pure $ Right $ CID v
   where
     nftStorageClient = client nftStorageApi
     query = nftStorageClient fileContents (pure ("Bearer " <> apiKey))
