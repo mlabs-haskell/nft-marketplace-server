@@ -2,6 +2,10 @@
   description = "nft-marketplace-server";
 
   inputs = {
+    flake-compat = {
+      url = "github:edolstra/flake-compat";
+      flake = false;
+    };
     haskell-nix.url = "github:input-output-hk/haskell.nix/fa2fa131fe15e630c91ab4078d12eb32c41f934b";
     nixpkgs.follows = "haskell-nix/nixpkgs-unstable";
     fourmolu = {
