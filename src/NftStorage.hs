@@ -5,10 +5,9 @@ module NftStorage (
 
 import Control.Monad.IO.Class (liftIO)
 import Data.Aeson (Value (..))
+import Data.Aeson.KeyMap qualified as KeyMap
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BSL
-import Data.HashMap.Strict qualified as HM
-import Data.Text (Text)
 import Data.Typeable (Typeable)
 import Network.HTTP.Media ((//))
 import Servant (Accept, Header, JSON, MimeRender, Post, Proxy (..), ReqBody, contentType, mimeRender, (:>))
@@ -50,10 +49,10 @@ nftStorageAdd nftStorageClientEnv apiKey fileContents = do
                 Left e -> Left ("Error making an nft.storage client request: " <> show e)
                 Right (Object body) -> pure body
                 _ -> Left "Error making an nft.storage client request: wrong response format"
-            val <- case body HM.!? ("value" :: Text) of
+            val <- case KeyMap.lookup "value" body of
                 Just (Object val) -> pure val
                 _ -> Left "Error making an ipfs client request: wrong response format"
-            case val HM.!? ("cid" :: Text) of
+            case KeyMap.lookup "cid" val of
                 Just (String cid) -> pure cid
                 _ -> Left "Error making an ipfs client request: wrong response format"
     case result' of
