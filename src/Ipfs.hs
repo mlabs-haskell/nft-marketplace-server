@@ -5,14 +5,13 @@ module Ipfs (
 
 import Control.Monad.IO.Class (liftIO)
 import Data.Aeson (Value (..))
+import Data.Aeson.KeyMap qualified as KeyMap
 import Data.ByteString (ByteString)
 import Data.ByteString.Lazy qualified as BSL
 import Data.Text (Text)
 import Network.IPFS.API (ApiV0Add)
 import Servant (Proxy (..))
 import Servant.Client (ClientEnv, client, runClientM)
-
-import Data.HashMap.Strict qualified as HM
 
 import App (App)
 
@@ -30,7 +29,7 @@ ipfsAdd envIpfsClientEnv fileContents = do
             liftIO $ putStrLn msg
             pure $ Left msg
         Right (Object obj)
-            | Just (String hash) <- obj HM.!? ("Hash" :: Text) ->
+            | Just (String hash) <- KeyMap.lookup "Hash" obj ->
                 pure . Right $ CID hash
         Right json -> do
             let msg = "Error making an ipfs client request: wrong response format: " <> show json

@@ -1,8 +1,9 @@
 dist-newstyle
 deploy/services/*
 
-# nix 
+# nix
 result
+.envrc
 
 # IDEs
 .vscode
