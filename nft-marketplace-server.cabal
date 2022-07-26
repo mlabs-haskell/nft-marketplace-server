@@ -74,6 +74,7 @@ executable nft-marketplace-server
     , directory
     , esqueleto
     , exceptions
+    , extra
     , filepath
     , http-client
     , http-client-tls

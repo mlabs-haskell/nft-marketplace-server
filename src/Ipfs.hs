@@ -12,8 +12,9 @@ import Data.Aeson.KeyMap qualified as KeyMap
 import Data.Bits (Bits (shiftL, shiftR, (.&.), (.|.)))
 import Data.ByteString (ByteString)
 import Data.ByteString.Lazy qualified as BSL
+import Data.Foldable (foldl')
+import Data.List.Extra ((!?))
 import Data.Map qualified as Map
-import Data.Maybe (fromJust)
 import Data.Sequence qualified as Seq
 import Data.Text (Text)
 import GHC.Float (float2Int, int2Float)
@@ -25,12 +26,6 @@ ipfsAddApi :: Proxy ApiV0Add
 ipfsAddApi = Proxy
 
 newtype CID = CID {unCID :: Text}
-
-data Base32 = Base32 {prefix32 :: String, name32 :: String, alphabet32 :: String, bitsPerChar32 :: Int}
-  deriving stock (Show)
-
-data Base36 = Base36 {prefix36 :: String, name36 :: String, alphabet36 :: String}
-  deriving stock (Show)
 
 data Out = Out {buffer :: Int, bits :: Int, written :: Int, out :: [Int]}
   deriving stock (Show)
@@ -73,55 +68,64 @@ ipfsAdd envIpfsClientEnv fileContents = do
         (Just 1) -- cid-version
         Nothing -- hash
 
-base32 :: Base32
-base32 = Base32 {prefix32 = "b", name32 = "base32", alphabet32 = "abcdefghijklmnopqrstuvwxyz234567", bitsPerChar32 = 5}
+base32Alphabet :: String
+base32Alphabet = "abcdefghijklmnopqrstuvwxyz234567"
 
-base36 :: Base36
-base36 = Base36 {prefix36 = "k", name36 = "base36", alphabet36 = "0123456789abcdefghijklmnopqrstuvwxyz"}
+base32BitsPerChar :: Int
+base32BitsPerChar = 5
 
-decodeBase32 :: String -> String -> Int -> [Int]
+base36Alphabet :: String
+base36Alphabet = "0123456789abcdefghijklmnopqrstuvwxyz"
+
+decodeBase32 :: String -> String -> Int -> Either String [Int]
 decodeBase32 string alphabet bitsPerChar =
-  out $ foldl writeOut (Out {buffer = 0, bits = 0, written = 0, out = []}) end
+  case foldl' writeOut (Right $ Out {buffer = 0, bits = 0, written = 0, out = []}) end of
+    Right x -> pure $ out x
+    Left err -> Left err
   where
-    insertInCodes :: [(Int, Char)] -> Map.Map Char Int -> Map.Map Char Int
-    insertInCodes [(i, a)] codesMap = Map.insert a i codesMap
-    insertInCodes ((i, a) : xs) codesMap = insertInCodes xs (Map.insert a i codesMap)
-    insertInCodes _ codesMap = codesMap
-
     codes :: Map.Map Char Int
-    codes = insertInCodes (zip [0 ..] alphabet) Map.empty
+    codes = Map.fromList (zip alphabet [0 ..])
 
     end :: String
     end = filter (/= '=') string
 
-    writeOut :: Out -> Char -> Out
-    writeOut acc c =
-      let value = fromJust $ Map.lookup c codes
-          newBuffer = (buffer acc `shiftL` bitsPerChar) .|. value
-          newBits = bits acc + bitsPerChar
-       in if newBits >= 8
-            then
-              Out
-                { buffer = newBuffer,
-                  bits = newBits - 8,
-                  written = written acc + 1,
-                  out = out acc ++ [0xff .&. (newBuffer `shiftR` (newBits - 8))]
-                }
-            else
-              Out
-                { buffer = newBuffer,
-                  bits = newBits,
-                  written = written acc,
-                  out = out acc
-                }
+    writeOut :: Either String Out -> Char -> Either String Out
+    writeOut acc c = do
+      acc' <- acc
+      case Map.lookup c codes of
+        Just value ->
+          let newBuffer = (buffer acc' `shiftL` bitsPerChar) .|. value
+              newBits = bits acc' + bitsPerChar
+           in if newBits >= 8
+                then
+                  pure $
+                    Out
+                      { buffer = newBuffer,
+                        bits = newBits - 8,
+                        written = written acc' + 1,
+                        out = out acc' ++ [0xff .&. (newBuffer `shiftR` (newBits - 8))]
+                      }
+                else
+                  pure $
+                    Out
+                      { buffer = newBuffer,
+                        bits = newBits,
+                        written = written acc',
+                        out = out acc'
+                      }
+        Nothing -> Left "Not found char in base32 alphabet"
 
-encodeBase36 :: String -> [Int] -> String
-encodeBase36 alphabet source =
-  let (pbegin, zeroes) = getZeroesAndPBegin 0 0
-      newB58 = reverse $ map snd $ Map.toList $ processBytes (size pbegin) pbegin (b58 [0 .. (size pbegin - 1)] Map.empty)
-      it2 = getIt2 (size pbegin) (size pbegin - (size pbegin - 1)) newB58
-      str = replicate zeroes leader
-   in getStr str it2 (size pbegin) newB58
+encodeBase36 :: String -> [Int] -> Either String String
+encodeBase36 alphabet source = do
+  (pbegin, zeroes) <- getZeroesAndPBegin 0 0
+
+  b58Context <- processBytes (size pbegin) pbegin (Map.fromList [(i, 0) | i <- [0 .. (size pbegin - 1)]])
+
+  let b58List = reverse $ map snd $ Map.toList b58Context
+
+  it2 <- getIt2 (size pbegin) (size pbegin - (size pbegin - 1)) b58List
+
+  getStr (replicate zeroes leader) it2 (size pbegin) b58List
   where
     base :: Int
     base = length alphabet
@@ -135,49 +139,60 @@ encodeBase36 alphabet source =
     pend :: Int
     pend = length source
 
-    getZeroesAndPBegin :: Int -> Int -> (Int, Int)
-    getZeroesAndPBegin pbegin zeroes =
-      if pbegin /= pend && (source !! pbegin) == 0
-        then getZeroesAndPBegin (pbegin + 1) (zeroes + 1)
-        else (pbegin, zeroes)
+    getZeroesAndPBegin :: Int -> Int -> Either String (Int, Int)
+    getZeroesAndPBegin pbegin zeroes = case source !? pbegin of
+      Just i ->
+        if pbegin /= pend && i == 0
+          then getZeroesAndPBegin (pbegin + 1) (zeroes + 1)
+          else pure (pbegin, zeroes)
+      Nothing -> Left $ "Cannot access index " ++ show pbegin ++ " in " ++ show source
 
     size :: Int -> Int
-    size pbegin = float2Int (int2Float (pend - pbegin) * iFactor + 1) `shiftR` 0
+    size pbegin = float2Int (int2Float (pend - pbegin) * iFactor + 1)
 
-    b58 :: [Int] -> Map.Map Int Int -> Map.Map Int Int
-    b58 [x] b58Context = Map.insert x 0 b58Context
-    b58 (x : xs) b58Context = b58 xs (Map.insert x 0 b58Context)
-    b58 [] _ = Map.empty
-
-    processBytes :: Int -> Int -> Map.Map Int Int -> Map.Map Int Int
+    processBytes :: Int -> Int -> Map.Map Int Int -> Either String (Map.Map Int Int)
     processBytes size' pbegin b58Context =
       if pbegin /= pend
-        then
-          let carry = source !! pbegin
-           in processBytes size' (pbegin + 1) (snd $ applyBytes (size' - 1) carry b58Context)
-        else b58Context
+        then case source !? pbegin of
+          Just carry -> do
+            b58WithAppliedBytes <- applyBytes (size' - 1) carry b58Context
+            processBytes size' (pbegin + 1) (snd b58WithAppliedBytes)
+          Nothing -> Left $ "Cannot access index " ++ show pbegin ++ " in " ++ show source
+        else pure b58Context
 
-    applyBytes :: Int -> Int -> Map.Map Int Int -> (Int, Map.Map Int Int)
-    applyBytes size' carry b58Context = Seq.foldlWithIndex f (carry, b58Context) (Seq.fromList [0 .. (size' - 1)])
+    applyBytes :: Int -> Int -> Map.Map Int Int -> Either String (Int, Map.Map Int Int)
+    applyBytes size' carry b58Context = Seq.foldlWithIndex f (Right (carry, b58Context)) (Seq.fromList [0 .. (size' - 1)])
       where
-        f :: (Int, Map.Map Int Int) -> Int -> Int -> (Int, Map.Map Int Int)
-        f (carry', b58Context') idx _ =
-          let bit = Map.toList b58Context' !! idx
-              newCarry = carry' + ((256 * snd bit) `shiftR` 0)
-           in ((newCarry `div` base) `shiftR` 0, Map.update (\_ -> Just (mod newCarry base `shiftR` 0)) (fst bit) b58Context')
+        f :: Either String (Int, Map.Map Int Int) -> Int -> Int -> Either String (Int, Map.Map Int Int)
+        f acc idx _ = do
+          (carry', b58Context') <- acc
+          case Map.toList b58Context' !? idx of
+            Just bit ->
+              let newCarry = carry' + (256 * snd bit)
+               in pure (newCarry `div` base, Map.update (\_ -> Just (mod newCarry base)) (fst bit) b58Context')
+            Nothing -> Left $ "Cannot access index " ++ show idx ++ " in " ++ show (Map.toList b58Context')
 
-    getIt2 :: Int -> Int -> [Int] -> Int
-    getIt2 size' it2 newB58 =
-      if it2 /= size' && (newB58 !! it2) == 0
-        then getIt2 size' (it2 + 1) newB58
-        else it2
+    getIt2 :: Int -> Int -> [Int] -> Either String Int
+    getIt2 size' it2 b58List = case b58List !? it2 of
+      Just i ->
+        if it2 /= size' && i == 0
+          then getIt2 size' (it2 + 1) b58List
+          else pure it2
+      Nothing -> Left $ "Cannot access index " ++ show it2 ++ " in " ++ show b58List
 
-    getStr :: String -> Int -> Int -> [Int] -> String
-    getStr str it2 size' newB58 =
+    getStr :: String -> Int -> Int -> [Int] -> Either String String
+    getStr str it2 size' b58List =
       if it2 < size'
-        then str ++ getStr [alphabet !! (newB58 !! it2)] (it2 + 1) size' newB58
-        else str
+        then case (b58List !? it2) >>= (alphabet !?) of
+          Just i -> do
+            c <- getStr [i] (it2 + 1) size' b58List
+            pure $ str ++ c
+          Nothing -> Left $ "Cannot access index " ++ show it2 ++ " in " ++ show b58List
+        else pure str
 
-encodeBase32InBase36 :: String -> Maybe String
-encodeBase32InBase36 (_ : xs) = Just $ (['k'] ++) $ encodeBase36 (alphabet36 base36) $ decodeBase32 xs (alphabet32 base32) (bitsPerChar32 base32)
-encodeBase32InBase36 _ = Nothing
+encodeBase32InBase36 :: String -> Either String String
+encodeBase32InBase36 (_ : xs) = do
+  decodedSource <- decodeBase32 xs base32Alphabet base32BitsPerChar
+  out <- encodeBase36 base36Alphabet decodedSource
+  pure $ 'k' : out
+encodeBase32InBase36 _ = Left "String is too short"

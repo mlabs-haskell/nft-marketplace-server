@@ -61,8 +61,8 @@ nftStorageAdd nftStorageClientEnv apiKey fileContents = do
       liftIO $ putStrLn e
       pure $ Left e
     Right v -> case encodeBase32InBase36 (unpack v) of
-      Just x -> pure $ Right $ CID (pack x)
-      Nothing -> pure $ Left "error while enconding CID"
+      Right x -> pure $ Right $ CID (pack x)
+      Left err -> pure $ Left $ "error while enconding CID: " ++ err
   where
     nftStorageClient = client nftStorageApi
     query = nftStorageClient fileContents (pure ("Bearer " <> apiKey))
