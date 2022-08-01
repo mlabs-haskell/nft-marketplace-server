@@ -27,11 +27,10 @@ import Servant.Client (ClientEnv, client, runClientM)
 ipfsAddApi :: Proxy ApiV0Add
 ipfsAddApi = Proxy
 
-data CIDBase32
-data CIDBase36
-newtype CID base = CID {unCID :: Text}
+data CIDBase = CIDBase32 | CIDBase36
+newtype CID (base :: CIDBase) = CID {unCID :: Text}
 
-makeBase32CID :: Text -> CID CIDBase32
+makeBase32CID :: Text -> CID 'CIDBase32
 makeBase32CID = CID
 
 data Out = Out {buffer :: Int, bits :: Int, written :: Int, out :: [Int]}
@@ -191,7 +190,7 @@ encodeBase36 alphabet source = do
                 Nothing -> Left $ "Something went wrong, malformed input: " ++ show b58List
             else pure str
 
-encodeBase32InBase36 :: CID CIDBase32 -> Either String (CID CIDBase36)
+encodeBase32InBase36 :: CID 'CIDBase32 -> Either String (CID 'CIDBase36)
 encodeBase32InBase36 (CID cid) = case T.unpack cid of
     (_ : xs) -> do
         decodedSource <- decodeBase32 xs base32Alphabet base32BitsPerChar
