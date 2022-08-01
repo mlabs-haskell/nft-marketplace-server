@@ -69,10 +69,12 @@ executable nft-marketplace-server
     , base16
     , bytestring
     , conduit
+    , containers
     , cryptohash-sha256
     , directory
     , esqueleto
     , exceptions
+    , extra
     , filepath
     , http-client
     , http-client-tls
