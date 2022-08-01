@@ -1,7 +1,8 @@
 module Ipfs (
     encodeBase32InBase36,
     ipfsAdd,
-    CID (..),
+    CID (unCID),
+    makeBase32CID,
 ) where
 
 import App (App)
@@ -17,6 +18,7 @@ import Data.List.Extra ((!?))
 import Data.Map qualified as Map
 import Data.Sequence qualified as Seq
 import Data.Text (Text)
+import Data.Text qualified as T
 import GHC.Float (float2Int, int2Float)
 import Network.IPFS.API (ApiV0Add)
 import Servant (Proxy (..))
@@ -25,12 +27,17 @@ import Servant.Client (ClientEnv, client, runClientM)
 ipfsAddApi :: Proxy ApiV0Add
 ipfsAddApi = Proxy
 
-newtype CID = CID {unCID :: Text}
+data CIDBase32
+data CIDBase36
+newtype CID base = CID {unCID :: Text}
+
+makeBase32CID :: Text -> CID CIDBase32
+makeBase32CID = CID
 
 data Out = Out {buffer :: Int, bits :: Int, written :: Int, out :: [Int]}
     deriving stock (Show)
 
-ipfsAdd :: ClientEnv -> ByteString -> App (Either String CID)
+ipfsAdd :: ClientEnv -> ByteString -> App (Either String Text)
 ipfsAdd envIpfsClientEnv fileContents = do
     result <- liftIO $ runClientM query envIpfsClientEnv
     case result of
@@ -40,7 +47,7 @@ ipfsAdd envIpfsClientEnv fileContents = do
             pure $ Left msg
         Right (Object obj)
             | Just (String hash) <- KeyMap.lookup "Hash" obj ->
-                pure . Right $ CID hash
+                pure . Right $ hash
         Right json -> do
             let msg = "Error making an ipfs client request: wrong response format: " <> show json
             liftIO $ putStrLn msg
@@ -184,9 +191,10 @@ encodeBase36 alphabet source = do
                 Nothing -> Left $ "Something went wrong, malformed input: " ++ show b58List
             else pure str
 
-encodeBase32InBase36 :: String -> Either String String
-encodeBase32InBase36 (_ : xs) = do
-    decodedSource <- decodeBase32 xs base32Alphabet base32BitsPerChar
-    out <- encodeBase36 base36Alphabet decodedSource
-    pure $ 'k' : out
-encodeBase32InBase36 _ = Left "String is too short"
+encodeBase32InBase36 :: CID CIDBase32 -> Either String (CID CIDBase36)
+encodeBase32InBase36 (CID cid) = case T.unpack cid of
+    (_ : xs) -> do
+        decodedSource <- decodeBase32 xs base32Alphabet base32BitsPerChar
+        out <- encodeBase36 base36Alphabet decodedSource
+        pure $ CID $ T.pack $ 'k' : out
+    _ -> Left "String is too short"

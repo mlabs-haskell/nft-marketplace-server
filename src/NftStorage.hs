@@ -1,6 +1,5 @@
 module NftStorage (
     nftStorageAdd,
-    CID (..),
 ) where
 
 import App (App)
@@ -10,9 +9,9 @@ import Data.Aeson.KeyMap qualified as KeyMap
 import Data.Bifunctor (bimap)
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BSL
-import Data.Text (pack, unpack)
+import Data.Text (Text)
 import Data.Typeable (Typeable)
-import Ipfs (CID (..), encodeBase32InBase36)
+import Ipfs (CID (unCID), encodeBase32InBase36, makeBase32CID)
 import Network.HTTP.Media ((//))
 import Servant (Accept, Header, JSON, MimeRender, Post, Proxy (..), ReqBody, contentType, mimeRender, (:>))
 import Servant.Client (ClientEnv, client, runClientM)
@@ -42,7 +41,7 @@ type NftStorageApi =
 nftStorageApi :: Proxy NftStorageApi
 nftStorageApi = Proxy
 
-nftStorageAdd :: ClientEnv -> String -> BS.ByteString -> App (Either String CID)
+nftStorageAdd :: ClientEnv -> String -> BS.ByteString -> App (Either String Text)
 nftStorageAdd nftStorageClientEnv apiKey fileContents = do
     result <- liftIO $ runClientM query nftStorageClientEnv
     let result' = do
@@ -60,7 +59,7 @@ nftStorageAdd nftStorageClientEnv apiKey fileContents = do
         Left e -> do
             liftIO $ putStrLn e
             pure $ Left e
-        Right v -> pure $ bimap ("error while enconding CID: " ++) (CID . pack) (encodeBase32InBase36 (unpack v))
+        Right v -> pure $ bimap ("error while encoding CID: " ++) unCID (encodeBase32InBase36 (makeBase32CID v))
   where
     nftStorageClient = client nftStorageApi
     query = nftStorageClient fileContents (pure ("Bearer " <> apiKey))
