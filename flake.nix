@@ -127,7 +127,7 @@
       apps = perSystem (system: self.flake.${system}.apps);
       devShell = perSystem (system: self.flake.${system}.devShell);
       overlays = {
-        nft-marketplace-server = pkgsSelf: pkgsSuper: {
+        nft-marketplace-server = pkgsSelf: _: {
           nft-marketplace-server = self.packages.${pkgsSelf.system}."nft-marketplace-server:exe:nft-marketplace-server";
         };
         default = self.overlays.nft-marketplace-server;
