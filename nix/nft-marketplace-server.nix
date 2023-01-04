@@ -49,7 +49,7 @@ in
       default = "/var/lib/nft-marketplace-server";
     };
 
-    # TODO never store secret keys like this, they would end in the Nix store
+    # TODO never store secrets keys like this, they would end in the Nix store
     nftStorageKey = lib.mkOption {
       type = lib.types.str;
       default = "";
