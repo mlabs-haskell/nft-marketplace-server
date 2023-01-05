@@ -2,25 +2,19 @@
   description = "nft-marketplace-server";
 
   inputs = {
-    flake-compat = {
-      url = "github:edolstra/flake-compat";
-      flake = false;
-    };
-    haskell-nix.url = "github:input-output-hk/haskell.nix/fa2fa131fe15e630c91ab4078d12eb32c41f934b";
-    nixpkgs.follows = "haskell-nix/nixpkgs-unstable";
-    fourmolu = {
-      url = "github:fourmolu/fourmolu?ref=v0.6.0.0";
-      flake = false;
-    };
-    # hlint = {
-    #   url = "github:ndmitchell/hlint?ref=v3.4";
-    #   flake = false;
-    # };
+    haskell-nix.url = "github:input-output-hk/haskell.nix";
+    nixpkgs.follows = "haskell-nix/nixpkgs";
   };
 
   outputs = inputs@{ self, nixpkgs, ... }:
     let
-      supportedSystems = with nixpkgs.lib.systems.supported; tier1 ++ tier2 ++ tier3;
+      supportedSystems = [
+        "x86_64-linux"
+        "aarch64-linux"
+        "x86_64-darwin"
+        "aarch64-darwin"
+      ];
+
       perSystem = nixpkgs.lib.genAttrs supportedSystems;
 
       nixpkgsFor = system: import nixpkgs {
@@ -81,7 +75,7 @@
         in
         pkgs.haskell-nix.cabalProject' {
           name = "nft-marketplace-server";
-          compiler-nix-name = "ghc923";
+          compiler-nix-name = "ghc925";
           src = ./.;
           modules = [{
             reinstallableLibGhc = true;
@@ -108,7 +102,9 @@
       project = perSystem projectFor;
       flake = perSystem (system: (projectFor system).flake { });
 
-      packages = perSystem (system: self.flake.${system}.packages);
+      packages = perSystem (system: self.flake.${system}.packages // {
+        upload-image = (nixpkgsFor system).callPackage ./nix/upload-image.nix {};
+      });
       checks = perSystem (system:
         self.flake.${system}.checks
         // self.flake.${system}.packages
@@ -124,7 +120,12 @@
             nativeBuildInputs = builtins.attrValues self.checks.${system};
           } "touch $out"
       );
-      apps = perSystem (system: self.flake.${system}.apps);
+      apps = perSystem (system: self.flake.${system}.apps // {
+        upload-image = {
+          type = "app";
+          program = "${self.packages.${system}.upload-image}/bin/upload-image";
+        };
+      });
       devShell = perSystem (system: self.flake.${system}.devShell);
       overlays = {
         nft-marketplace-server = pkgsSelf: _: {
